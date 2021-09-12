@@ -35,25 +35,9 @@ ship-location:
 # <>------------<>
 # Please setup the NPC using Citizens.
 # Once setup, add the NPCs id to the list
-npc-id:
+# Use '/npc id' to view the NPCs id
+npc-ids:
   - -1
-
-# The world to spawn the NPC in
-npc-world: 'world'
-
-# Setting y to -1 will stop the npc from spawning
-npc-location:
-  x: 0
-  y: -1
-  z: 0
-  yaw: 0
-  pitch: 0
-
-npc-display-name: '&9Sea Merchant'
-
-# The type of entity
-# Visit https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html for a list of types
-npc-entity-type: 'VILLAGER'
 
 # <>------------<>
 # <    Ticket    >

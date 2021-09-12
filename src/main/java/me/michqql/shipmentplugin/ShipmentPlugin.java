@@ -57,7 +57,7 @@ public final class ShipmentPlugin extends JavaPlugin {
 
         // Handlers and Managers
         this.schematicHandler = new SchematicHandler(this, mainConfigurationFile);
-        this.npcHandler = new NPCHandler(this, mainConfigurationFile);
+        this.npcHandler = new NPCHandler(mainConfigurationFile);
         this.shipmentManager = new ShipmentManager(this, schematicHandler, npcHandler, mainConfigurationFile);
 
         // Commands
@@ -95,9 +95,6 @@ public final class ShipmentPlugin extends JavaPlugin {
         if(permanent) {
             if(schematicHandler != null)
                 schematicHandler.undoPaste();
-
-            if(npcHandler != null)
-                npcHandler.despawnNPC();
         }
     }
 
