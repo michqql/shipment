@@ -1,0 +1,36 @@
+no-permission:
+  - '&9[Shipment] &cYou do not have permission to use this command!'
+  - '&cYou must have permission &f%permission%&c!'
+
+admin-help-command:
+  - '&9[Shipment] &4Admin commands:'
+  - ' &c/shipment help &fDisplays this help message'
+  - ' &c/shipment reload &fReloads possible files'
+  - ' &c/shipment save &fAttempts to save plugin data'
+  - ' &c/shipment bounds &fToggles view of bounds'
+
+reload-command:
+  - '&9[Shipment] &7Plugin reloaded in &f%ms%ms&7!'
+
+save-command:
+  - '&9[Shipment] &7Plugin saved in &f%ms%ms&7!'
+
+bounds-command:
+  - '&9[Shipment] &7Shipment boundary viewing: &f%enabled%'
+
+purchase:
+  no-inventory-space:
+    - '&9[Shipment] &cYou do not have space in your inventory for a ticket!'
+    - '&cPlease make some space and try again'
+
+  # %cost% - the cost of the purchase, %balance% - players balance
+  insufficient-funds:
+    - '&9[Shipment] &cYou do not have the funds for this purchase!'
+    - '&cCosts: &f%cost%'
+    - '&cBalance: &f%balance%'
+
+  # %id% - the ticket id, %date% - the date of the shipment
+  successful:
+    - '&9[Shipment] &7Purchase was successful'
+    - '&7Ticket ID: &f%id%'
+    - '&7Date Valid: &f%date%'

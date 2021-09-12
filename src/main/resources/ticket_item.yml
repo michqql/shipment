@@ -1,0 +1,15 @@
+# List of placeholders applicable to this item:
+# %date% - the date of the shipment this ticket belongs to
+# %id% - the ID of the ticket
+# %player% - the player's name who purchased this ticket
+# %cost% - the total cost of this ticket to buy
+
+# See this list of valid materials here: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+material: 'PAPER'
+
+display-name: '&3Ticket %id%'
+
+lore:
+  - '&bTicket belongs to &f%player%'
+  - '&bTotal cost was &f%cost%'
+  - '&bShipment belonging to &f%date%'

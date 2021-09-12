@@ -1,0 +1,69 @@
+# <>------------<>
+# <   Shipment   >
+# <>------------<>
+# Must be a valid day of week, from 1-7
+# 1 being monday, 7 being sunday
+shipment-day-of-week: 7
+
+# How often shipments are automatically saved (in minutes)
+# Set to -1 to only save shipments on server closing
+auto-save: 5
+
+# If set to true, items can still be edited (added/removed) on the day of sales
+# Otherwise, only future shipments will be editable
+real-time-editing: true
+
+# <>------------<>
+# <   The Ship   >
+# <>------------<>
+# The name of the schematic to load in the 'schematics' folder
+# Do not include file extension in this name
+ship-schematic-name: 'ship'
+ship-schematic-extension: 'schem'
+
+# The world to spawn the ship in
+ship-world: 'world'
+
+# Setting y to -1 will stop the ship from spawning
+ship-location:
+  x: 0
+  y: -1
+  z: 0
+
+# <>------------<>
+# <   The  NPC   >
+# <>------------<>
+# Please setup the NPC using Citizens.
+# Once setup, add the NPCs id to the list
+npc-id:
+  - -1
+
+# The world to spawn the NPC in
+npc-world: 'world'
+
+# Setting y to -1 will stop the npc from spawning
+npc-location:
+  x: 0
+  y: -1
+  z: 0
+  yaw: 0
+  pitch: 0
+
+npc-display-name: '&9Sea Merchant'
+
+# The type of entity
+# Visit https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html for a list of types
+npc-entity-type: 'VILLAGER'
+
+# <>------------<>
+# <    Ticket    >
+# <>------------<>
+# If set to true, all ticket purchases will be logged to a permanent file
+record-ticket-purchases: true
+
+# If set to true, all ticket purchases will be output to the console
+output-ticket-purchases: false
+
+# config ideas:
+# skip-shipments-with-no-items-to-sell (skips shipments that have not been setup to sell items)
+# max-purchases-per-player-per-shipment (players can only purchase x tickets from the shipment)

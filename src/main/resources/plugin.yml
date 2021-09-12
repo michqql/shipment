@@ -1,0 +1,13 @@
+name: ShipmentPlugin
+version: ${project.version}
+main: me.michqql.shipmentplugin.ShipmentPlugin
+api-version: 1.16
+prefix: ShipmentPlugin
+authors: [ michqql ]
+
+depend:
+  - WorldEdit
+  - Citizens
+
+commands:
+  shipment: {}
