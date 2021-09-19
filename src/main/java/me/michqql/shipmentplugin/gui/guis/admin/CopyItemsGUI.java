@@ -5,6 +5,7 @@ import me.michqql.shipmentplugin.gui.GUIManager;
 import me.michqql.shipmentplugin.gui.item.ItemBuilder;
 import me.michqql.shipmentplugin.shipment.Shipment;
 import me.michqql.shipmentplugin.shipment.ShipmentManager;
+import me.michqql.shipmentplugin.utils.MessageUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -29,11 +30,13 @@ public class CopyItemsGUI extends GUI {
             12, 13, 14
     };
 
+    private final MessageUtil messageUtil;
     private final ShipmentManager shipmentManager;
     private final Shipment toCopy;
 
-    public CopyItemsGUI(Plugin bukkitPlugin, Player player, ShipmentManager shipmentManager, Shipment toCopy) {
+    public CopyItemsGUI(Plugin bukkitPlugin, Player player, MessageUtil messageUtil, ShipmentManager shipmentManager, Shipment toCopy) {
         super(bukkitPlugin, player);
+        this.messageUtil = messageUtil;
         this.shipmentManager = shipmentManager;
         this.toCopy = toCopy;
 
@@ -114,7 +117,7 @@ public class CopyItemsGUI extends GUI {
         Shipment next = shipments[3];
         if(slot == NEXT_SHIPMENT_SLOT && next != null && next.compareShipmentChronology() == 1) {
             next.getItemsForSale().addAll(this.toCopy.getItemsForSale());
-            new MainOverviewGUI(bukkitPlugin, player, shipmentManager).openGUI();
+            new MainOverviewGUI(bukkitPlugin, player, messageUtil, shipmentManager).openGUI();
             return true;
         }
 
@@ -138,7 +141,7 @@ public class CopyItemsGUI extends GUI {
                 return true;
 
             shipment.getItemsForSale().addAll(this.toCopy.getItemsForSale());
-            new MainOverviewGUI(bukkitPlugin, player, shipmentManager).openGUI();
+            new MainOverviewGUI(bukkitPlugin, player, messageUtil, shipmentManager).openGUI();
         }
         return true;
     }

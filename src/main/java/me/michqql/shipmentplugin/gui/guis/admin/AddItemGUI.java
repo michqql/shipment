@@ -5,6 +5,7 @@ import me.michqql.shipmentplugin.gui.GUIManager;
 import me.michqql.shipmentplugin.gui.item.ItemBuilder;
 import me.michqql.shipmentplugin.shipment.Shipment;
 import me.michqql.shipmentplugin.utils.Colour;
+import me.michqql.shipmentplugin.utils.MessageUtil;
 import org.bukkit.Material;
 import org.bukkit.conversations.*;
 import org.bukkit.entity.Player;
@@ -24,18 +25,7 @@ public class AddItemGUI extends GUI {
     };
 
     // Prompt
-    private final static NumericPrompt PRICE_PROMPT = new NumericPrompt() {
-        @Override
-        protected @Nullable Prompt acceptValidatedInput(@NotNull ConversationContext context, @NotNull Number input) {
-            context.setSessionData("price", input.doubleValue());
-            return null;
-        }
-
-        @Override
-        public @NotNull String getPromptText(@NotNull ConversationContext context) {
-            return Colour.format("&3Please enter a price!");
-        }
-    };
+    private final NumericPrompt pricePrompt;
 
     private final Shipment shipment;
 
@@ -44,13 +34,26 @@ public class AddItemGUI extends GUI {
     private int amount;
     private double price;
 
-    public AddItemGUI(Plugin bukkitPlugin, Player player, Shipment shipment) {
+    public AddItemGUI(Plugin bukkitPlugin, Player player, MessageUtil messageUtil, Shipment shipment) {
         super(bukkitPlugin, player);
         this.shipment = shipment;
 
         this.originalItem = null;
         this.amount = 1;
         this.price = 0;
+
+        this.pricePrompt = new NumericPrompt() {
+            @Override
+            protected @Nullable Prompt acceptValidatedInput(@NotNull ConversationContext context, @NotNull Number input) {
+                context.setSessionData("price", input.doubleValue());
+                return null;
+            }
+
+            @Override
+            public @NotNull String getPromptText(@NotNull ConversationContext context) {
+                return MessageUtil.format(messageUtil.getMessage("setup.enter-price"));
+            }
+        };
 
         build("&9Add item", 1);
     }
@@ -178,7 +181,7 @@ public class AddItemGUI extends GUI {
                 // 2. Prompt player to enter an amount in chat
                 // 3. Upon entering an amount, open this GUI again
                 ConversationFactory cf = new ConversationFactory(bukkitPlugin);
-                Conversation c = cf.withFirstPrompt(PRICE_PROMPT)
+                Conversation c = cf.withFirstPrompt(pricePrompt)
                         .withLocalEcho(false)
                         .addConversationAbandonedListener(abandonedEvent -> {
                             ConversationContext context = abandonedEvent.getContext();
@@ -189,7 +192,6 @@ public class AddItemGUI extends GUI {
                             if(context.getForWhom() instanceof Player) {
                                 Player cp = (Player) context.getForWhom();
 
-                                cp.sendMessage(Colour.format("&3Price has been set as: $" + price));
                                 GUIManager.loadSavedGUIs(cp.getUniqueId());
                                 GUIManager.reopenCurrentGUI(cp.getUniqueId());
                             }

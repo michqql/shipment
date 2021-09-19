@@ -1,0 +1,4 @@
+handle tickets that contain invalid items (items that have been deleted since ticket purchase)
+option to save a shipments items to a preset
+default preset to apply to upcoming shipments (w/ random preset option)
+force start/end shipment

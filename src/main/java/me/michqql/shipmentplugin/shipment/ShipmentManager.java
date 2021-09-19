@@ -34,24 +34,25 @@ public class ShipmentManager {
         this.plugin = plugin;
         this.schematicHandler = schematicHandler;
         this.npcHandler = npcHandler;
-        this.load(config.getConfig());
 
+        loadConfig(config.getConfig());
         startDailyTimer();
         autoSaveTimer();
     }
 
-    private void load(FileConfiguration f) {
+    private void loadConfig(FileConfiguration f) {
+        // Day of week
         try {
-            this.shipmentDayOfWeek = DayOfWeek.of(f.getInt("shipment-day-of-week"));
+            this.shipmentDayOfWeek = DayOfWeek.of(f.getInt("shipment.day-of-week"));
         } catch(DateTimeException e) {
             Bukkit.getLogger().warning("[Shipment] Invalid day of week. (shipment-day-of-week must be an integer between 1 and 7)");
             Bukkit.getLogger().warning("[Shipment] Invalid day of week. Shipment day of week has been set to SUNDAY (7)");
             this.shipmentDayOfWeek = DayOfWeek.SUNDAY;
         }
 
-        this.realTimeEditing = f.getBoolean("real-time-editing");
-        this.autoSaveTimeInMinutes = f.getInt("auto-save");
-
+        // Saving and editing
+        this.realTimeEditing = f.getBoolean("shipment.real-time-editing");
+        this.autoSaveTimeInMinutes = f.getInt("shipment.auto-save");
     }
 
     /**
@@ -129,6 +130,7 @@ public class ShipmentManager {
             System.arraycopy(shipments, 1, shipments, 0, shipments.length - 1);
 
             // Generate new future shipment
+            // Apply item preset if applicable
             long timestamp = TimeUtil.getDayTimeStamp(shipmentDayOfWeek, 3);
             shipments[shipments.length - 1] = new Shipment(timestamp); // Actual value of index is always 6
         }
@@ -238,6 +240,16 @@ public class ShipmentManager {
 
         return today.isShipmentToday() ? today : null;
     }
+
+    /* Presets */
+    public boolean doesPresetExist(String name) {
+        return false;
+    }
+
+    public void createPreset(String name) {
+
+    }
+    /* End of Presets */
 
     public Shipment[] getShipments() {
         return shipments;

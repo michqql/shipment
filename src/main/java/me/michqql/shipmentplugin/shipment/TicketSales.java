@@ -45,6 +45,10 @@ public class TicketSales {
         return ticketSales;
     }
 
+    public int getUserPurchases(UUID uuid) {
+        return playerToTicketMap.getOrDefault(uuid, new ArrayList<>()).size();
+    }
+
     public int getUserSales() {
         return playerToTicketMap.size();
     }

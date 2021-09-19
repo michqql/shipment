@@ -18,7 +18,28 @@ save-command:
 bounds-command:
   - '&9[Shipment] &7Shipment boundary viewing: &f%enabled%'
 
+npc-no-shipment:
+  - '&9[Shipment] &cThere is no shipment this week!'
+
+setup:
+  enter-price:
+    - '&9[Shipment] &7Please enter a price for this item'
+
+  enter-preset-name:
+    - '&9[Shipment] &7Please enter a name for this preset'
+
+  # %name% - the name of the preset
+  preset-name-taken:
+    - '&9[Shipment] &cA preset called %name% already exists'
+
+  # %name% - the name of the preset
+  preset-created:
+    - '&9[Shipment] &aSuccessfully created shipment named %name%'
+
 purchase:
+  reached-max-purchases:
+    - '&9[Shipment] &cYou have reached the maximum number of tickets purchasable for this shipment!'
+
   no-inventory-space:
     - '&9[Shipment] &cYou do not have space in your inventory for a ticket!'
     - '&cPlease make some space and try again'
@@ -26,11 +47,24 @@ purchase:
   # %cost% - the cost of the purchase, %balance% - players balance
   insufficient-funds:
     - '&9[Shipment] &cYou do not have the funds for this purchase!'
-    - '&cCosts: &f%cost%'
-    - '&cBalance: &f%balance%'
+    - '&cCost: &f$%cost%'
+    - '&cBalance: &f$%balance%'
+
+  unexpected-error:
+    - '&9[Shipment] &cAn unexpected error has occurred'
+    - '&cPlease contact an admin for help!'
+    - '&fIssue: %issue%'
 
   # %id% - the ticket id, %date% - the date of the shipment
   successful:
     - '&9[Shipment] &7Purchase was successful'
     - '&7Ticket ID: &f%id%'
     - '&7Date Valid: &f%date%'
+
+claim:
+  must-hold-ticket:
+    - '&9[Shipment] &cYou must be holding a ticket to open this crate!'
+
+  not-purchaser:
+    - '&9[Shipment] &cThis ticket does not belong to you!'
+    - '&cYou can only open crates with tickets you have purchased'

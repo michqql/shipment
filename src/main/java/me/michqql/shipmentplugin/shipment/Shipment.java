@@ -17,7 +17,7 @@ public class Shipment {
     Shipment(long shipmentEpochMS) {
         this.shipmentEpochMS = shipmentEpochMS;
 
-        this.itemsForSale = new ItemsForSale(45);
+        this.itemsForSale = new ItemsForSale();
         this.ticketSales = new TicketSales(itemsForSale);
     }
 

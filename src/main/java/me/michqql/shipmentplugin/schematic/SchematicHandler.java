@@ -17,10 +17,8 @@ import me.michqql.shipmentplugin.data.CommentFile;
 import me.michqql.shipmentplugin.data.type.ExceptionFile;
 import me.michqql.shipmentplugin.data.type.SchematicFile;
 import me.michqql.shipmentplugin.utils.IOUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -33,12 +31,14 @@ import java.util.Set;
 public class SchematicHandler {
 
     private final ShipmentPlugin plugin;
+    private final HologramHandler hologramHandler;
 
     // Configuration options
     private String schematicName;
     private String schematicExtension;
     private World world;
     private Location location;
+    private List<Material> crateMaterials;
 
     // Schematic
     private boolean spawned;
@@ -50,10 +50,11 @@ public class SchematicHandler {
 
     public SchematicHandler(ShipmentPlugin plugin, CommentFile config) {
         this.plugin = plugin;
+        this.hologramHandler = new HologramHandler(plugin, config);
         this.allowSpawning = true;
 
         // Attempts to create the folder if it does not exist
-        IOUtil.createFolder(plugin.getDataFolder(), "schematics");
+        IOUtil.makeDirectory(plugin.getDataFolder(), "schematics");
 
         // Configuration options
         load(config.getConfig());
@@ -87,6 +88,18 @@ public class SchematicHandler {
         if(y == -1) {
             this.allowSpawning = false;
         }
+
+        // Crate materials
+        List<String> stringListMaterials = f.getStringList("crate-materials");
+        this.crateMaterials = new ArrayList<>();
+        for(String string : stringListMaterials) {
+            try {
+                crateMaterials.add(Material.valueOf(string));
+            } catch(IllegalArgumentException ignore) {}
+        }
+
+        if(crateMaterials.size() == 0)
+            Bukkit.getLogger().warning("[Shipment] No crate materials found - check materials are valid");
     }
 
     private void loadSchematic() {
@@ -148,6 +161,7 @@ public class SchematicHandler {
         }
 
         this.spawned = true;
+        this.hologramHandler.loadHolograms(getCrates());
         Bukkit.getLogger().info("[Shipment] Schematic pasted");
     }
 
@@ -181,6 +195,7 @@ public class SchematicHandler {
         // 2. Delete copy of region after use
         file.delete();
         this.spawned = false;
+        hologramHandler.unloadHolograms();
         Bukkit.getLogger().info("[Shipment] Schematic undone");
     }
 
@@ -283,5 +298,30 @@ public class SchematicHandler {
         }
 
         return locations;
+    }
+
+    public List<Material> getCrateMaterials() {
+        return crateMaterials;
+    }
+
+    private List<Block> getCrates() {
+        final List<Block> crates = new ArrayList<>();
+        if(!allowSpawning || !isSpawned())
+            return crates;
+
+        Location[] minMax = getRegionMinMax();
+        Location min = minMax[0];
+        Location max = minMax[1];
+
+        for(int x = min.getBlockX(); x < max.getBlockX(); x++) {
+            for(int z = min.getBlockZ(); z < max.getBlockZ(); z++) {
+                for(int y = min.getBlockY(); y < max.getBlockY(); y++) {
+                    Block block = world.getBlockAt(x, y, z);
+                    if(crateMaterials.contains(block.getType()))
+                        crates.add(block);
+                }
+            }
+        }
+        return crates;
     }
 }

@@ -2,7 +2,6 @@ package me.michqql.shipmentplugin.gui.guis.player;
 
 import me.michqql.shipmentplugin.gui.GUI;
 import me.michqql.shipmentplugin.shipment.ItemsForSale;
-import me.michqql.shipmentplugin.shipment.Shipment;
 import me.michqql.shipmentplugin.shipment.TicketSales;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;

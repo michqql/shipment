@@ -11,5 +11,5 @@ display-name: '&3Ticket %id%'
 
 lore:
   - '&bTicket belongs to &f%player%'
-  - '&bTotal cost was &f%cost%'
+  - '&bTotal cost was &f$%cost%'
   - '&bShipment belonging to &f%date%'

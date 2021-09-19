@@ -11,8 +11,8 @@ public class ItemsForSale {
     private final int itemLimit;
     private final ForSale[] sales;
 
-    public ItemsForSale(int itemLimit) {
-        this.itemLimit = itemLimit;
+    public ItemsForSale() {
+        this.itemLimit = 45;
         this.sales = new ForSale[itemLimit];
     }
 

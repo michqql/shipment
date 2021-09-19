@@ -5,9 +5,11 @@ api-version: 1.16
 prefix: ShipmentPlugin
 authors: [ michqql ]
 
-depend:
+softdepend:
   - WorldEdit
   - Citizens
+  - Vault
+  - HolographicDisplays
 
 commands:
   shipment: {}

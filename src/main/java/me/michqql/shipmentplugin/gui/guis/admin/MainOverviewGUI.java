@@ -4,6 +4,7 @@ import me.michqql.shipmentplugin.gui.GUI;
 import me.michqql.shipmentplugin.gui.item.ItemBuilder;
 import me.michqql.shipmentplugin.shipment.Shipment;
 import me.michqql.shipmentplugin.shipment.ShipmentManager;
+import me.michqql.shipmentplugin.utils.MessageUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -28,10 +29,12 @@ public class MainOverviewGUI extends GUI {
             10, 11, 12, 13, 14, 15, 16
     };
 
+    private final MessageUtil messageUtil;
     private final ShipmentManager shipmentManager;
 
-    public MainOverviewGUI(Plugin bukkitPlugin, Player player, ShipmentManager shipmentManager) {
+    public MainOverviewGUI(Plugin bukkitPlugin, Player player, MessageUtil messageUtil, ShipmentManager shipmentManager) {
         super(bukkitPlugin, player);
+        this.messageUtil = messageUtil;
         this.shipmentManager = shipmentManager;
 
         build("&9Shipments", 3);
@@ -111,7 +114,7 @@ public class MainOverviewGUI extends GUI {
             if(shipment == null)
                 return true;
 
-            new ShipmentGUI(bukkitPlugin, player, shipmentManager, shipment).openGUI();
+            new ShipmentGUI(bukkitPlugin, player, messageUtil, shipmentManager, shipment).openGUI();
         }
         return true;
     }

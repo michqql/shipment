@@ -30,7 +30,6 @@ public class BuyGUI extends GUI {
     // Slots
     private final static int TICKET_PURCHASE_SLOT = 4, ITEM_START_SLOT = 9;
 
-    private final TextFile logFile;
     private final MessageUtil messageUtil;
 
     private final Economy economy;
@@ -38,7 +37,8 @@ public class BuyGUI extends GUI {
     private final ItemsForSale itemsForSale;
 
     // Configuration options
-    private boolean logPurchases, outputPurchases;
+    private int maxTicketsPerPlayer;
+    private boolean outputPurchases;
     private Material material;
     private String displayName;
     private List<String> lore;
@@ -47,7 +47,6 @@ public class BuyGUI extends GUI {
 
     public BuyGUI(Plugin bukkitPlugin, Player player, CommentFile config, MessageUtil messageUtil, Economy economy, Shipment shipment) {
         super(bukkitPlugin, player);
-        this.logFile = new TextFile(bukkitPlugin, "", "purchase-logs");
         this.messageUtil = messageUtil;
         this.economy = economy;
         this.shipment = shipment;
@@ -62,7 +61,7 @@ public class BuyGUI extends GUI {
     }
 
     private void loadConfig(FileConfiguration config) {
-        this.logPurchases = config.getBoolean("record-ticket-purchases");
+        this.maxTicketsPerPlayer = config.getInt("max-tickets-per-player-per-shipment");
         this.outputPurchases = config.getBoolean("output-ticket-purchases");
     }
 
@@ -168,31 +167,47 @@ public class BuyGUI extends GUI {
 
         final double totalCost = calculateTotalCost();
 
-        // 1. Check player has inventory space
+        // 1. Check if player has reached max purchases
+        if(maxTicketsPerPlayer > 0 && (shipment.getTicketSales().getUserPurchases(player.getUniqueId()) == maxTicketsPerPlayer)) {
+            player.closeInventory();
+            messageUtil.sendList(player, "purchase.reached-max-purchases");
+            return;
+        }
+
+        // 2. Check player has inventory space
         if(player.getInventory().firstEmpty() == -1) {
+            player.closeInventory();
             messageUtil.sendList(player, "purchase.no-inventory-space");
             return;
         }
 
-        // 2. Check player has funds
-        // 3. Subtract funds
-        EconomyResponse response = economy.withdrawPlayer(player, totalCost);
-        if(!response.transactionSuccess()) {
+        // 3. Check player has funds
+        final double balance = economy.getBalance(player);
+        if(balance < totalCost) {
+            player.closeInventory();
             messageUtil.sendList(player, "purchase.insufficient-funds", new HashMap<String, String>(){{
                 put("cost", String.valueOf(totalCost));
-                put("balance", String.valueOf(response.balance));
+                put("balance", String.valueOf(balance));
+            }});
+            return;
+        }
+
+        // 4. Subtract funds
+        EconomyResponse response = economy.withdrawPlayer(player, totalCost);
+        if(!response.transactionSuccess()) {
+            player.closeInventory();
+            messageUtil.sendList(player, "purchase.unexpected-error", new HashMap<String, String>(){{
+                put("issue", response.errorMessage);
             }});
             return;
         }
 
         String date = DATE_TIME_FORMATTER.format(shipment.getAsDate());
 
-        if(logPurchases) logFile.write(player.getName() + ": Purchased ticket (shipment " + date + ")");
         if(outputPurchases) Bukkit.getLogger().info(player.getName() + ": Purchased ticket (shipment " + date + ")");
 
-        // 4. Add ticket to players inventory
+        // 5. Add ticket to players inventory
         final int ticketID = shipment.getTicketSales().buyTicket(player.getUniqueId(), itemBasket);
-        if(logPurchases) logFile.write(player.getName() + ": Ticket processed successfully (shipment " + date + ")");
         if(outputPurchases) Bukkit.getLogger().info(player.getName() + ": Ticket processed successfully (shipment " + date + ")");
         itemBasket = new ArrayList<>();
 
@@ -213,7 +228,6 @@ public class BuyGUI extends GUI {
                 .persistentData(bukkitPlugin, "playerUUID", PersistentDataType.STRING, player.getUniqueId().toString());
 
         player.getInventory().addItem(ticketItem.getItem());
-        if(logPurchases) logFile.write(player.getName() + ": Ticket added to inventory (shipment " + date + ")");
         if(outputPurchases) Bukkit.getLogger().info(player.getName() + ": Ticket added to inventory (shipment " + date + ")");
         messageUtil.sendList(player, "purchase.successful", placeholders);
 

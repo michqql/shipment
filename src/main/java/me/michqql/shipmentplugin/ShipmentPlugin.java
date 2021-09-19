@@ -11,7 +11,9 @@ import me.michqql.shipmentplugin.shipment.ShipmentManager;
 import me.michqql.shipmentplugin.utils.MessageUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -28,10 +30,6 @@ public final class ShipmentPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Create persistent objects here
-        new InventoryListener(this);
-
-        // Loading non-persistent objects...
         startup();
     }
 
@@ -43,12 +41,21 @@ public final class ShipmentPlugin extends JavaPlugin {
     private void startup() {
         // Loads 'config.yml' using custom implementation
         CommentFile mainConfigurationFile = new CommentFile(this, "", "config");
+
+        // Check dependencies are installed
+        if(!areRequiredDependenciesInstalled(mainConfigurationFile.getConfig())) {
+            Bukkit.getLogger().severe("[Shipment] Missing required dependency - disabling plugin");
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        // Inform user to setup config
         if(mainConfigurationFile.isNewFile())
             Bukkit.getLogger().warning("[Shipment First Time Setup] Please visit the 'config.yml' to setup this plugin!");
 
         // Vault
         if(!setupEconomy()) {
-            Bukkit.getLogger().warning("[Shipment] No Vault or Economy plugin found. Please install to use this plugin!");
+            Bukkit.getLogger().warning("[Shipment] No Economy plugin linked to Vault found. Please install to use this plugin!");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
@@ -57,7 +64,7 @@ public final class ShipmentPlugin extends JavaPlugin {
 
         // Handlers and Managers
         this.schematicHandler = new SchematicHandler(this, mainConfigurationFile);
-        this.npcHandler = new NPCHandler(mainConfigurationFile);
+        this.npcHandler = new NPCHandler(this, mainConfigurationFile);
         this.shipmentManager = new ShipmentManager(this, schematicHandler, npcHandler, mainConfigurationFile);
 
         // Commands
@@ -65,15 +72,17 @@ public final class ShipmentPlugin extends JavaPlugin {
                 new ShipmentCommand(this, messageUtil, schematicHandler, shipmentManager));
 
         // Events
+        new InventoryListener(this);
         Bukkit.getPluginManager().registerEvents(
-                new NPCListener(this, mainConfigurationFile, messageUtil, economy, npcHandler, shipmentManager)
-                , this);
+                new NPCListener(this, mainConfigurationFile, messageUtil, economy, npcHandler, shipmentManager),
+                this);
         Bukkit.getPluginManager().registerEvents(
-                new CrateListener(this, schematicHandler, shipmentManager), this);
+                new CrateListener(this, mainConfigurationFile, messageUtil, schematicHandler, shipmentManager),
+                this);
     }
 
     public void reload() {
-        Bukkit.getLogger().info("[Shipment] Reloading NovaCraft Shipment Plugin...");
+        Bukkit.getLogger().info("[Shipment] Reloading Shipment Plugin...");
         shutdown(false);
         startup();
         Bukkit.getLogger().info("[Shipment] Reload complete");
@@ -96,6 +105,41 @@ public final class ShipmentPlugin extends JavaPlugin {
             if(schematicHandler != null)
                 schematicHandler.undoPaste();
         }
+    }
+
+    /*
+     * Plugin dependencies:
+     * - WorldEdit
+     * - Citizens
+     * - Vault
+     * - HolographicDisplays (optional)
+     */
+    private boolean areRequiredDependenciesInstalled(FileConfiguration config) {
+        boolean passed = true;
+        boolean usingHolographicDisplays = config.getBoolean("use-holographic-displays");
+
+        final PluginManager pm = Bukkit.getPluginManager();
+        if(!pm.isPluginEnabled("WorldEdit")) {
+            Bukkit.getLogger().severe("[Shipment] Missing dependency - WorldEdit");
+            passed = false;
+        }
+
+        if(!pm.isPluginEnabled("Citizens")) {
+            Bukkit.getLogger().severe("[Shipment] Missing dependency - Citizens");
+            passed = false;
+        }
+
+        if(!pm.isPluginEnabled("Vault")) {
+            Bukkit.getLogger().severe("[Shipment] Missing dependency - Vault");
+            passed = false;
+        }
+
+        if(usingHolographicDisplays && !pm.isPluginEnabled("HolographicDisplays")) {
+            Bukkit.getLogger().severe("[Shipment] Missing dependency - HolographicDisplays");
+            passed = false;
+        }
+
+        return passed;
     }
 
     private boolean setupEconomy() {

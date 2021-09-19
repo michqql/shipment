@@ -45,7 +45,7 @@ public class ShipmentCommand implements CommandExecutor {
             if(!isPlayer) {
                 Bukkit.getLogger().warning("[Shipment] You must be a player to open the admin GUI");
             } else {
-                new MainOverviewGUI(plugin, (Player) sender, shipmentManager).openGUI();
+                new MainOverviewGUI(plugin, (Player) sender, msg, shipmentManager).openGUI();
             }
             return true;
         }
