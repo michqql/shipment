@@ -1,15 +1,20 @@
 package me.michqql.shipmentplugin.schematic;
 
 import me.michqql.shipmentplugin.ShipmentPlugin;
+import me.michqql.shipmentplugin.data.CommentFile;
+import me.michqql.shipmentplugin.events.CrateOpenEvent;
 import me.michqql.shipmentplugin.gui.guis.player.ClaimGUI;
 import me.michqql.shipmentplugin.gui.item.ItemBuilder;
 import me.michqql.shipmentplugin.shipment.Shipment;
 import me.michqql.shipmentplugin.shipment.ShipmentManager;
 import me.michqql.shipmentplugin.shipment.TicketSales;
+import me.michqql.shipmentplugin.utils.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,19 +23,51 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.checkerframework.checker.units.qual.min;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 public class CrateListener implements Listener {
 
     private final ShipmentPlugin plugin;
+    private final MessageUtil messageUtil;
     private final SchematicHandler schematicHandler;
     private final ShipmentManager shipmentManager;
 
-    public CrateListener(ShipmentPlugin plugin, SchematicHandler schematicHandler, ShipmentManager shipmentManager) {
+    // Configurable options
+    private boolean warnDuplicateTickets;
+    private boolean onlyPurchaserCanOpen;
+    private boolean playSound;
+    private Sound sound;
+    private float volume, pitch;
+
+    public CrateListener(ShipmentPlugin plugin, CommentFile config, MessageUtil messageUtil, SchematicHandler schematicHandler, ShipmentManager shipmentManager) {
         this.plugin = plugin;
+        this.messageUtil = messageUtil;
         this.schematicHandler = schematicHandler;
         this.shipmentManager = shipmentManager;
+
+        loadConfig(config.getConfig());
+    }
+
+    private void loadConfig(FileConfiguration f) {
+        // Ticket restrictions
+        this.warnDuplicateTickets = f.getBoolean("ticket.warn-duplicate-tickets", true);
+        this.onlyPurchaserCanOpen = f.getBoolean("ticket.only-purchaser-can-claim");
+
+        // Sound
+        this.playSound = f.getBoolean("crates.effects.sound.play");
+        this.volume = (float) f.getDouble("crates.effects.sound.volume");
+        this.pitch = (float) f.getDouble("crates.effects.sound.pitch");
+        String soundString = f.getString("crates.effects.sound.on-open", "");
+        try {
+            this.sound = Sound.valueOf(soundString);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            this.playSound = false;
+        }
     }
 
     @EventHandler
@@ -39,13 +76,13 @@ public class CrateListener implements Listener {
         if(shipmentManager.getTodaysShipment() == null)
             return;
 
-        // 1. Check clicked block is a chest
+        // 1. Check clicked block is a valid type
         if(!e.hasBlock())
             return;
 
         Block block = e.getClickedBlock();
         assert block != null; // Checked by e.hasBlock()
-        if(block.getType() != Material.CHEST)
+        if(!schematicHandler.getCrateMaterials().contains(block.getType()))
             return;
 
         // 2. Check clicked block is within shipment region
@@ -68,22 +105,61 @@ public class CrateListener implements Listener {
         else
             main = true;
 
-        if(ticket == null)
+        if(ticket == null) {
+            messageUtil.sendList(player, "claim.must-hold-ticket");
             return;
-        else {
+        }
+
+        // Check if ticket is a duplicate
+        if(ticket.isClaimed()) {
             if(main)
                 player.getInventory().setItemInMainHand(null);
             else
                 player.getInventory().setItemInOffHand(null);
-        }
 
-        if(ticket.isClaimed()) {
-            Bukkit.getLogger().warning("[Shipment] " + player.getName() + " (" + player.getUniqueId() + ") had duplicate ticket!");
+            if(warnDuplicateTickets) {
+                Bukkit.getLogger().warning("[Shipment] " + player.getName() + " (" + player.getUniqueId() + ") had duplicate ticket!");
+                Bukkit.getLogger().warning("[Shipment] Purchaser: " + ticket.getPlayer() + ", TicketID: " + ticket.getTicketId());
+
+                final TicketSales.Ticket finalTicket = ticket;
+                HashMap<String, String> placeholders = new HashMap<String, String>(){{
+                    put("opener.name", player.getName());
+                    put("opener.uuid", player.getUniqueId().toString());
+                    put("purchaser.uuid", finalTicket.getPlayer().toString());
+                    put("ticket-id", String.valueOf(finalTicket.getTicketId()));
+                }};
+
+                for(Player online : Bukkit.getOnlinePlayers()) {
+                    if(online.hasPermission("shipment.warn")) {
+                        messageUtil.sendList(online, "purchase.staff-warn-duplicate", placeholders);
+                    }
+                }
+            }
             return;
         }
 
+        Shipment shipment = shipmentManager.getTodaysShipment();
+        if(shipment == null)
+            return;
+
+        // Check player is purchaser and config option enabled
+        if(onlyPurchaserCanOpen && !ticket.getPlayer().equals(player.getUniqueId())) {
+            messageUtil.sendList(player, "claim.not-purchaser");
+            return;
+        }
+
+        // Remove ticket item from players inventory
+        if(main)
+            player.getInventory().setItemInMainHand(null);
+        else
+            player.getInventory().setItemInOffHand(null);
+
+        if(playSound)
+            player.playSound(block.getLocation(), sound, volume, pitch);
+
         // 4. Open ClaimGUI corresponding to held ticket
-        new ClaimGUI(plugin, player, ticket).openGUI();
+        Bukkit.getPluginManager().callEvent(new CrateOpenEvent(player, shipment, ticket));
+        new ClaimGUI(plugin, player, shipment.getItemsForSale(), ticket).openGUI();
     }
 
     private boolean isInsideRegion(Location location, Location min, Location max) {

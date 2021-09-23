@@ -3,9 +3,11 @@ package me.michqql.shipmentplugin.gui.guis.admin;
 import me.michqql.shipmentplugin.gui.GUI;
 import me.michqql.shipmentplugin.gui.GUIManager;
 import me.michqql.shipmentplugin.gui.item.ItemBuilder;
+import me.michqql.shipmentplugin.preset.PresetHandler;
 import me.michqql.shipmentplugin.shipment.Shipment;
 import me.michqql.shipmentplugin.shipment.ShipmentManager;
 import me.michqql.shipmentplugin.shipment.TicketSales;
+import me.michqql.shipmentplugin.utils.MessageUtil;
 import me.michqql.shipmentplugin.utils.TimeUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -30,14 +32,20 @@ public class ShipmentGUI extends GUI {
             1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26
     };
 
+    private final MessageUtil messageUtil;
     private final ShipmentManager shipmentManager;
+    private final PresetHandler presetHandler;
     private final Shipment shipment;
 
     private int ticketPage = 0;
 
-    public ShipmentGUI(Plugin bukkitPlugin, Player player, ShipmentManager shipmentManager, Shipment shipment) {
+    public ShipmentGUI(Plugin bukkitPlugin, Player player, MessageUtil messageUtil,
+                       ShipmentManager shipmentManager, PresetHandler presetHandler, Shipment shipment) {
+
         super(bukkitPlugin, player);
+        this.messageUtil = messageUtil;
         this.shipmentManager = shipmentManager;
+        this.presetHandler = presetHandler;
         this.shipment = shipment;
 
         build("&9" + TimeUtil.DATE_FORMATTER.format(shipment.getAsDate()), 3);
@@ -86,7 +94,7 @@ public class ShipmentGUI extends GUI {
                 break;
 
             case ITEM_SALE_SLOT:
-                new ItemsForSaleGUI(bukkitPlugin, player, shipmentManager, shipment).openGUI();
+                new ItemsForSaleGUI(bukkitPlugin, player, messageUtil, shipmentManager, presetHandler, shipment).openGUI();
                 break;
 
             case TICKET_SALES_SLOT:

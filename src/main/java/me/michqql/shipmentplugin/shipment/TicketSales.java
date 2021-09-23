@@ -1,7 +1,6 @@
 package me.michqql.shipmentplugin.shipment;
 
 import org.bukkit.configuration.ConfigurationSection;
-
 import java.util.*;
 
 public class TicketSales {
@@ -23,7 +22,7 @@ public class TicketSales {
         return null;
     }
 
-    public int buyTicket(UUID uuid, List<ItemsForSale.ForSale> purchases) {
+    public Ticket buyTicket(UUID uuid, List<ItemsForSale.ForSale> purchases) {
         final int ticketId = ticketSales++;
         final Ticket ticket = new Ticket(uuid, ticketId, purchases);
 
@@ -34,7 +33,7 @@ public class TicketSales {
             tickets.add(ticket);
             return tickets;
         });
-        return ticketId;
+        return ticket;
     }
 
     public boolean hasSales() {
@@ -43,6 +42,10 @@ public class TicketSales {
 
     public int getTicketSales() {
         return ticketSales;
+    }
+
+    public int getUserPurchases(UUID uuid) {
+        return playerToTicketMap.getOrDefault(uuid, new ArrayList<>()).size();
     }
 
     public int getUserSales() {
@@ -61,7 +64,7 @@ public class TicketSales {
         // 3. Loop through each ticket's ForSale, adding index to an array
         playerToTicketMap.forEach((uuid, tickets) -> tickets.forEach(ticket -> {
             List<Integer> forSaleIndexes = new ArrayList<>();
-            ticket.purchases.forEach(sale -> forSaleIndexes.add(sale.index));
+            ticket.purchases.forEach(sale -> forSaleIndexes.add(sale.saleIndex));
 
             section.set("players." + uuid + "." + ticket.ticketId + ".claimed", ticket.isClaimed());
             section.set("players." + uuid + "." + ticket.ticketId + ".items", forSaleIndexes);
@@ -103,11 +106,17 @@ public class TicketSales {
                     continue;
                 }
 
-                List<ItemsForSale.ForSale> purchases = new ArrayList<>();
                 boolean claimed = ticketSection.getBoolean(strTicketID + ".claimed");
-                List<Integer> indexes = ticketSection.getIntegerList(strTicketID + ".items");
-                for(int index : indexes) {
-                    purchases.add(itemsForSale.getItemForSale(index));
+                List<ItemsForSale.ForSale> purchases = new ArrayList<>();
+                List<Integer> saleIndexes = ticketSection.getIntegerList(strTicketID + ".items");
+                for(int saleIndex : saleIndexes) {
+                    ItemsForSale.ForSale item = itemsForSale.getItemForSaleBySaleIndex(saleIndex);
+
+                    // Item has been removed
+                    if(item == null)
+                        continue;
+
+                    purchases.add(item);
                 }
 
                 tickets.add(new Ticket(uuid, ticketID, purchases, claimed));
@@ -150,7 +159,7 @@ public class TicketSales {
             return purchases;
         }
 
-        public int getItemSize() {
+        public int getPurchaseSize() {
             return purchases.size();
         }
 

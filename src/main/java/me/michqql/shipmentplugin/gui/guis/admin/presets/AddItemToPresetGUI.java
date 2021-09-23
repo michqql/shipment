@@ -1,9 +1,9 @@
-package me.michqql.shipmentplugin.gui.guis.admin;
+package me.michqql.shipmentplugin.gui.guis.admin.presets;
 
 import me.michqql.shipmentplugin.gui.GUI;
 import me.michqql.shipmentplugin.gui.GUIManager;
 import me.michqql.shipmentplugin.gui.item.ItemBuilder;
-import me.michqql.shipmentplugin.shipment.Shipment;
+import me.michqql.shipmentplugin.preset.PresetHandler;
 import me.michqql.shipmentplugin.utils.MessageUtil;
 import org.bukkit.Material;
 import org.bukkit.conversations.*;
@@ -14,7 +14,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class AddItemGUI extends GUI {
+public class AddItemToPresetGUI extends GUI {
 
     // Slots
     private final static int BACK_SLOT = 0, ITEM_SLOT = 3, AMOUNT_SLOT = 4, PRICE_SLOT = 5, SAVE_SLOT = 8;
@@ -26,18 +26,17 @@ public class AddItemGUI extends GUI {
     // Prompt
     private final NumericPrompt pricePrompt;
 
-    private final Shipment shipment;
+    private final PresetHandler.Preset preset;
 
-    private ItemStack originalItem;
-    //private ItemStack item;
+    private ItemStack item;
     private int amount;
     private double price;
 
-    public AddItemGUI(Plugin bukkitPlugin, Player player, MessageUtil messageUtil, Shipment shipment) {
+    public AddItemToPresetGUI(Plugin bukkitPlugin, Player player, MessageUtil messageUtil, PresetHandler.Preset preset) {
         super(bukkitPlugin, player);
-        this.shipment = shipment;
+        this.preset = preset;
 
-        this.originalItem = null;
+        this.item = null;
         this.amount = 1;
         this.price = 0;
 
@@ -73,13 +72,13 @@ public class AddItemGUI extends GUI {
 
     @Override
     protected void updateInventory() {
-        if(originalItem == null) {
+        if(item == null) {
             this.inventory.setItem(ITEM_SLOT, new ItemBuilder(Material.ITEM_FRAME)
                     .displayName("&3No item")
                     .lore("&bYou have not yet added an item!")
                     .getItem());
         } else {
-            ItemStack copy = new ItemStack(originalItem);
+            ItemStack copy = new ItemStack(item);
             this.inventory.setItem(ITEM_SLOT, new ItemBuilder(copy)
                     .addLore(
                             "",
@@ -107,7 +106,7 @@ public class AddItemGUI extends GUI {
                 .lore(
                         "&bSaves item and goes back",
                         "",
-                        "&bItem: " + (originalItem == null ? "&cnone" : "&f" + originalItem.getI18NDisplayName()),
+                        "&bItem: " + (item == null ? "&cnone" : "&f" + item.getI18NDisplayName()),
                         "&bAmount: &f" + amount,
                         "&bPrice: &f$" + price
                 ).getItem());
@@ -126,7 +125,7 @@ public class AddItemGUI extends GUI {
                 return true;
 
             case ITEM_SLOT:
-                boolean nullItem = originalItem == null;
+                boolean nullItem = item == null;
                 boolean emptyItem = player.getItemOnCursor().getType().isAir();
 
                 if(nullItem && emptyItem)
@@ -134,27 +133,27 @@ public class AddItemGUI extends GUI {
 
                 if(emptyItem) {
                     // Remove item
-                    player.setItemOnCursor(originalItem);
-                    this.originalItem = null;
+                    player.setItemOnCursor(item);
+                    this.item = null;
                 } else if(nullItem) {
                     // Set item
                     ItemStack cursor = player.getItemOnCursor();
                     player.setItemOnCursor(new ItemStack(Material.AIR));
 
-                    this.originalItem = cursor;
-                    this.amount = originalItem.getAmount();
+                    this.item = cursor;
+                    this.amount = item.getAmount();
                 } else {
                     // Swap item
                     ItemStack cursor = player.getItemOnCursor();
-                    player.setItemOnCursor(originalItem);
+                    player.setItemOnCursor(item);
 
-                    this.originalItem = cursor;
-                    this.amount = originalItem.getAmount();
+                    this.item = cursor;
+                    this.amount = item.getAmount();
                 }
                 break;
 
             case AMOUNT_SLOT:
-                if(originalItem == null)
+                if(item == null)
                     break;
 
                 if(clickType == ClickType.LEFT)
@@ -170,7 +169,7 @@ public class AddItemGUI extends GUI {
                 break;
 
             case PRICE_SLOT:
-                if(originalItem == null)
+                if(item == null)
                     break;
 
                 // 1. Save this GUI structure
@@ -199,12 +198,12 @@ public class AddItemGUI extends GUI {
                 return true;
 
             case SAVE_SLOT:
-                if(originalItem == null)
+                if(item == null)
                     return true;
 
-                ItemStack toSave = new ItemStack(originalItem);
+                ItemStack toSave = new ItemStack(item);
                 toSave.setAmount(amount);
-                shipment.getItemsForSale().addItemForSale(toSave, price);
+                preset.getItems().addItemForSale(toSave, price);
                 GUIManager.openPreviousGUI(player.getUniqueId());
                 return true;
         }

@@ -1,69 +1,126 @@
 # <>------------<>
 # <   Shipment   >
 # <>------------<>
-# Must be a valid day of week, from 1-7
-# 1 being monday, 7 being sunday
-shipment-day-of-week: 7
+shipment:
+  # Must be a valid day of week, from 1-7
+  # 1 being monday, 7 being sunday
+  day-of-week: 7
 
-# How often shipments are automatically saved (in minutes)
-# Set to -1 to only save shipments on server closing
-auto-save: 5
+  # How often shipments are automatically saved (in minutes)
+  # Set to -1 to only save shipments on server closing
+  auto-save: 5
 
-# If set to true, items can still be edited (added/removed) on the day of sales
-# Otherwise, only future shipments will be editable
-real-time-editing: true
+  # If set to true, items can still be edited (added/removed) on the day of the shipment
+  # Otherwise, only future shipments will be editable
+  real-time-editing: true
+
+# <>------------<>
+# < Item Presets >
+# <>------------<>
+# When a new upcoming shipment is created, should it be auto populated
+# with items as defined by an 'item preset' (a saved set of items from a
+# previous shipment)
+presets:
+  enabled: true
+
+  # If there are multiple presets, should a random preset be chosen and applied
+  random: true
+
+  # The identifier for the default preset to be applied (if random preset is false)
+  default-identifier: ''
 
 # <>------------<>
 # <   The Ship   >
 # <>------------<>
-# The name of the schematic to load in the 'schematics' folder
-# Do not include file extension in this name
-ship-schematic-name: 'ship'
-ship-schematic-extension: 'schem'
+ship:
+  # The name of the schematic to load in the 'schematics' folder
+  # Do not include file extension in this name
+  schematic-name: 'ship'
+  schematic-extension: 'schem'
 
-# The world to spawn the ship in
-ship-world: 'world'
+  world: 'world'
 
-# Setting y to -1 will stop the ship from spawning
-ship-location:
-  x: 0
-  y: -1
-  z: 0
+  # Setting y to -1 will stop the ship from spawning
+  location:
+    x: 0
+    y: -1
+    z: 0
 
 # <>------------<>
 # <   The  NPC   >
 # <>------------<>
-# Please setup the NPC using Citizens.
-# Once setup, add the NPCs id to the list
-npc-id:
-  - -1
+npc:
+  # Please setup the NPC using Citizens.
+  # Once setup, add the NPCs id to the list
+  # Use '/npc id' to view the NPCs id
+  ids:
+    - -1
 
-# The world to spawn the NPC in
-npc-world: 'world'
-
-# Setting y to -1 will stop the npc from spawning
-npc-location:
-  x: 0
-  y: -1
-  z: 0
-  yaw: 0
-  pitch: 0
-
-npc-display-name: '&9Sea Merchant'
-
-# The type of entity
-# Visit https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html for a list of types
-npc-entity-type: 'VILLAGER'
+  # If there are no items on sale for the next week,
+  # should the buy GUI not show when clicking on the NPC
+  # This will skip shipments that have not been setup
+  skip-empty-shipments: true
 
 # <>------------<>
 # <    Ticket    >
 # <>------------<>
-# If set to true, all ticket purchases will be logged to a permanent file
-record-ticket-purchases: true
+ticket:
+  # The maximum amount of tickets a single player can buy per shipment
+  # Set to -1 for infinite
+  max-per-player-per-shipment: 1
 
-# If set to true, all ticket purchases will be output to the console
-output-ticket-purchases: false
+  # Can players with a certain permission bypass this restriction?
+  max-ticket-permission-bypass: true
 
-# config ideas:
-# skip-shipments-with-no-items-to-sell (skips shipments that have not been setup to sell items)
-# max-purchases-per-player-per-shipment (players can only purchase x tickets from the shipment)
+  max-ticket-permissions:
+    vip:
+      # The permission the player is required to have
+      permission: 'shipment.vip'
+
+      # The new maximum amount of tickets the player can buy per shipment
+      upper-bound: 5
+
+    admin:
+      permission: 'perms.admin'
+      upper-bound: -1
+
+  # If set to true, all ticket purchases will be output to the console
+  output-purchases: false
+
+  # Send a warning message to console & staff if a player tries to open a duplicate ticket
+  warn-duplicate-tickets: true
+
+  # If true, only the player that purchased the ticket can claim its items
+  only-purchaser-can-claim: true
+
+# <>------------<>
+# <    Crates    >
+# <>------------<>
+crates:
+  # See list of valid materials here: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+  materials:
+    - 'CHEST'
+    - 'BARREL'
+
+  # Using holographic displays, should this plugin
+  # display a message above the crates?
+  use-holographic-displays: true
+
+  # Message displayed above crates
+  holographic-display:
+    - '&3Crate'
+
+  # Hologram is originally centered at X.5, Y, Z.5
+  # Offsets relative to prior values
+  hologram-offset:
+    x: 0
+    y: 1.5
+    z: 0
+
+  effects:
+    # See list of valid sounds here: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
+    sound:
+      play: true
+      on-open: 'BLOCK_CHEST_OPEN'
+      volume: 1.0
+      pitch: 1.0

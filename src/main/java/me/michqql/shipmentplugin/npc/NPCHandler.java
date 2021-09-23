@@ -2,137 +2,73 @@ package me.michqql.shipmentplugin.npc;
 
 import me.michqql.shipmentplugin.ShipmentPlugin;
 import me.michqql.shipmentplugin.data.CommentFile;
-import me.michqql.shipmentplugin.data.YamlFile;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.MemoryNPCDataStore;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.EntityType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class NPCHandler {
 
-    private final YamlFile npcFile;
+    private final CommentFile config;
 
-    // Configuration options
-    private String npcName;
-    private EntityType entityType;
-    private Location location;
-
-    // NPC
-    private NPCRegistry registry;
-    private NPC npc;
+    private final List<NPC> npcs;
     private boolean allowSpawning;
 
     public NPCHandler(ShipmentPlugin plugin, CommentFile config) {
-        this.npcFile = new YamlFile(plugin, "npc", "data");
-
+        this.config = config;
         this.allowSpawning = true;
 
-        load(config.getConfig());
-        loadNPC();
-        spawnNPC();
-    }
-
-    private void load(FileConfiguration f) {
-        // NPC
-        this.npcName = f.getString("npc-display-name");
-        String type = f.getString("npc-entity-type");
-        try {
-            this.entityType = EntityType.valueOf(type);
-        } catch(IllegalArgumentException e) {
-            this.allowSpawning = false;
-            Bukkit.getLogger().severe("[Shipment] Invalid NPC entity type - NPC will not spawn");
-            return;
-        }
-
-        // World
-        String worldName = f.getString("npc-world", "");
-        World world = Bukkit.getWorld(worldName);
-
-        if(world == null) {
-            this.allowSpawning = false;
-            Bukkit.getLogger().severe("[Shipment] Invalid NPC world name - NPC will not spawn");
-            return;
-        }
-
-        // Location
-        double x = f.getDouble("npc-location.x");
-        double y = f.getDouble("npc-location.y");
-        double z = f.getDouble("npc-location.z");
-        float yaw = (float) f.getDouble("npc-location.yaw");
-        float pitch = (float) f.getDouble("npc-location.pitch");
-
-        this.location = new Location(world, x, y, z, yaw, pitch);
-
-        if(y == -1) {
-            this.allowSpawning = false;
-        }
+        this.npcs = new ArrayList<>();
+        // Delay loading NPCs due to the delay in Citizens (delayed by 10s)
+        Bukkit.getScheduler().runTaskLater(plugin, this::loadNPC, 200);
     }
 
     private void loadNPC() {
         // Attempt to get a non-null registry
-        this.registry = CitizensAPI.getNPCRegistry();
+        // NPC
+        NPCRegistry registry = CitizensAPI.getNPCRegistry();
         if(registry == null) {
             Bukkit.getLogger().info("[Shipment] NPC default registry is null - generating new one");
-            this.registry = CitizensAPI.createAnonymousNPCRegistry(new MemoryNPCDataStore());
+            registry = CitizensAPI.createAnonymousNPCRegistry(new MemoryNPCDataStore());
         }
 
         // Check a final time to see if registry is still null
         if(registry == null) {
-            Bukkit.getLogger().warning("[Shipment] NPC Registry is null - NPC will not spawn");
+            Bukkit.getLogger().warning("[Shipment] NPC Registry is null - NPC disabled");
             this.allowSpawning = false;
-        }
-    }
-
-    public void spawnNPC() {
-        Bukkit.getLogger().info("[Shipment] Attempting to spawn NPC...");
-        if(!allowSpawning)
             return;
-
-        FileConfiguration f = npcFile.getConfig();
-
-        // 1. Load the citizens ID of the saved NPC
-        // 2. Try to get the NPC belonging to that ID
-        int citizensID = f.getInt("citizens-id", -1);
-        if(citizensID != -1) {
-            Bukkit.getLogger().info("[Shipment] Loaded previous NPC");
-            this.npc = registry.getById(citizensID);
         }
 
-        // 3. Check whether the NPC was loaded, if not create a new one
-        if(npc == null) {
-            Bukkit.getLogger().info("[Shipment] Created new NPC");
-            this.npc = registry.createNPC(entityType, ChatColor.translateAlternateColorCodes('&', npcName));
+        FileConfiguration f = config.getConfig();
+
+        List<Integer> ids = f.getIntegerList("npc.ids");
+        for(int citizensID : ids) {
+            if(citizensID == -1) {
+                this.allowSpawning = false;
+                Bukkit.getLogger().warning("[Shipment] NPC disabled (invalid id of -1)");
+                break;
+            }
+
+            NPC npc = registry.getById(citizensID);
+            if(npc == null) {
+                Bukkit.getLogger().warning("[Shipment] Invalid NPC registration of id " + citizensID);
+            } else {
+                npcs.add(registry.getById(citizensID));
+            }
         }
-
-        // 4. Set custom data of NPC
-        if(!npc.isSpawned()) {
-            npc.spawn(location);
-            npc.setProtected(true);
-        }
-
-        // 5. Save npc file with data
-        f.set("citizens-id", npc.getId());
-        npcFile.save();
-
-        Bukkit.getLogger().info("[Shipment] NPC spawned");
+        Bukkit.getLogger().info("[Shipment] " + npcs.size() + " NPCs have been registered");
     }
 
-    public void despawnNPC() {
-        Bukkit.getLogger().info("[Shipment] Attempting to despawn NPC...");
-        if(npc == null)
-            return;
-
-        npc.despawn();
-        Bukkit.getLogger().info("[Shipment] NPC despawned");
+    public boolean canSpawn() {
+        return allowSpawning;
     }
 
-    public NPC getNPC() {
-        return npc;
+    public List<NPC> getNpcs() {
+        return npcs;
     }
 }

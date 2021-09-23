@@ -1,0 +1,21 @@
+v1.0.0 Update
+
+FEATURES:
+
+
+QOL:
+
+BUGS:
+
+
+CHANGELOG
+option to save a shipments items to a preset
+default preset to apply to upcoming shipments (w/ random preset option)
+force start/end shipment
+max tickets purchasable per shipment can be edited by a permission
+send a warning message of duplicate ticket to all online players with permission
+ensure classes using an array[] expand their size automatically once full
+handle tickets that contain invalid items (items that have been deleted since ticket purchase)
+presets no longer apply to new shipments
+holograms do not disappear when force stopping a shipment
+Add events

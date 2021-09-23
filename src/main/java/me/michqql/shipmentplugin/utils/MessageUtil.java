@@ -73,6 +73,10 @@ public class MessageUtil {
         return format(string);
     }
 
+    public String getMessage(String path) {
+        return lang.getString(path, "");
+    }
+
     public static String replacePlaceholdersStatic(String string, Map<String, String> placeholders) {
         if(placeholders == null || placeholders.isEmpty())
             return format(string);

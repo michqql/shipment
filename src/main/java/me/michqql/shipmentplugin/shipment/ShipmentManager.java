@@ -2,7 +2,9 @@ package me.michqql.shipmentplugin.shipment;
 
 import me.michqql.shipmentplugin.ShipmentPlugin;
 import me.michqql.shipmentplugin.data.CommentFile;
-import me.michqql.shipmentplugin.npc.NPCHandler;
+import me.michqql.shipmentplugin.events.ShipmentStartEvent;
+import me.michqql.shipmentplugin.events.ShipmentStopEvent;
+import me.michqql.shipmentplugin.preset.PresetHandler;
 import me.michqql.shipmentplugin.schematic.SchematicHandler;
 import me.michqql.shipmentplugin.utils.TimeUtil;
 import org.bukkit.Bukkit;
@@ -19,8 +21,8 @@ public class ShipmentManager {
 
     private final Plugin plugin;
     private final SchematicHandler schematicHandler;
-    private final NPCHandler npcHandler;
-    private final Shipment[] shipments = new Shipment[7]; // first 3 are past, last 3 are future
+    private final PresetHandler presetHandler;
+    private final Shipment[] shipments; // first 3 are past, last 3 are future
 
     // Configuration options
     public DayOfWeek shipmentDayOfWeek = DayOfWeek.SUNDAY;
@@ -30,28 +32,31 @@ public class ShipmentManager {
     /**
      * @param config - The main configuration file 'config.yml'
      */
-    public ShipmentManager(ShipmentPlugin plugin, SchematicHandler schematicHandler, NPCHandler npcHandler, CommentFile config) {
+    public ShipmentManager(ShipmentPlugin plugin, SchematicHandler schematicHandler, PresetHandler presetHandler, CommentFile config) {
         this.plugin = plugin;
         this.schematicHandler = schematicHandler;
-        this.npcHandler = npcHandler;
-        this.load(config.getConfig());
+        this.presetHandler = presetHandler;
 
+        this.shipments = new Shipment[7];
+
+        loadConfig(config.getConfig());
         startDailyTimer();
         autoSaveTimer();
     }
 
-    private void load(FileConfiguration f) {
+    private void loadConfig(FileConfiguration f) {
+        // Day of week
         try {
-            this.shipmentDayOfWeek = DayOfWeek.of(f.getInt("shipment-day-of-week"));
+            this.shipmentDayOfWeek = DayOfWeek.of(f.getInt("shipment.day-of-week"));
         } catch(DateTimeException e) {
             Bukkit.getLogger().warning("[Shipment] Invalid day of week. (shipment-day-of-week must be an integer between 1 and 7)");
             Bukkit.getLogger().warning("[Shipment] Invalid day of week. Shipment day of week has been set to SUNDAY (7)");
             this.shipmentDayOfWeek = DayOfWeek.SUNDAY;
         }
 
-        this.realTimeEditing = f.getBoolean("real-time-editing");
-        this.autoSaveTimeInMinutes = f.getInt("auto-save");
-
+        // Saving and editing
+        this.realTimeEditing = f.getBoolean("shipment.real-time-editing");
+        this.autoSaveTimeInMinutes = f.getInt("shipment.auto-save");
     }
 
     /**
@@ -74,7 +79,8 @@ public class ShipmentManager {
             return;
 
         // Converts time in minutes into time in minecraft ticks
-        Bukkit.getScheduler().runTaskTimer(plugin, this::save, 20L, autoSaveTimeInMinutes * 60 * 20L);
+        final long period = autoSaveTimeInMinutes * 60 * 20L;
+        Bukkit.getScheduler().runTaskTimer(plugin, this::save, period, period);
     }
 
     /**
@@ -129,8 +135,11 @@ public class ShipmentManager {
             System.arraycopy(shipments, 1, shipments, 0, shipments.length - 1);
 
             // Generate new future shipment
+            // Apply item preset if applicable
             long timestamp = TimeUtil.getDayTimeStamp(shipmentDayOfWeek, 3);
-            shipments[shipments.length - 1] = new Shipment(timestamp); // Actual value of index is always 6
+
+            // Actual value of index is always 6
+            shipments[shipments.length - 1] = new Shipment(timestamp, plugin, presetHandler.getDefaultPreset());
         }
 
         // Check current day
@@ -149,14 +158,47 @@ public class ShipmentManager {
      */
     private void updateCurrentShipment() {
         Bukkit.getScheduler().runTask(plugin, () -> {
-            if(shipments[3].isShipmentToday()) {
-                schematicHandler.pasteSchematic();
-                //npcHandler.spawnNPC(); // dont spawn, we want this always
+            Shipment current = shipments[3];
+            if(current == null) {
+                initialiseShipments();
+                return;
+            }
+
+            if(current.isShipmentToday()) {
+                ShipmentStartEvent startEvent = new ShipmentStartEvent(current, false);
+                Bukkit.getPluginManager().callEvent(startEvent);
+
+                if(!startEvent.isCancelled())
+                    schematicHandler.pasteSchematic();
             } else {
+                ShipmentStopEvent stopEvent = new ShipmentStopEvent(current, false);
+                Bukkit.getPluginManager().callEvent(stopEvent);
+
                 schematicHandler.undoPaste();
-                //npcHandler.despawnNPC(); // don't despawn, we want to keep it
             }
         });
+    }
+
+    public void forceShipment(boolean start) {
+        Shipment current = shipments[3];
+        if(current == null)
+            return;
+
+        if(start) {
+            current.forceStarted = true;
+            ShipmentStartEvent shipmentStartEvent = new ShipmentStartEvent(current, true);
+            Bukkit.getPluginManager().callEvent(shipmentStartEvent);
+
+            if(!shipmentStartEvent.isCancelled())
+                schematicHandler.pasteSchematic();
+        }
+        else {
+            current.forceEnded = true;
+            ShipmentStopEvent stopEvent = new ShipmentStopEvent(current, true);
+            Bukkit.getPluginManager().callEvent(stopEvent);
+
+            schematicHandler.undoPaste();
+        }
     }
 
     /**
@@ -174,20 +216,22 @@ public class ShipmentManager {
             long timestamp = TimeUtil.getDayTimeStamp(shipmentDayOfWeek, weeksAgo);
 
             // Load and read file if exists
-            shipments[i] = new Shipment(timestamp, plugin);
+            shipments[i] = new Shipment(timestamp, plugin, null);
         }
 
         /* CURRENT/NEXT SHIPMENT */
-        //  1. Determine next shipment timestamp
-        shipments[3] = new Shipment(getNextShipment(), plugin);
+        // 1. Determine next shipment timestamp
+        //    Apply item preset if applicable
+        shipments[3] = new Shipment(getNextShipment(), plugin, presetHandler.getDefaultPreset());
 
         /* FUTURE SHIPMENTS */
         // 1. Determine future shipment timestamps
+        //    Apply item preset if applicable
         for(int i = 0; i < 3; i++) {
             int weeksAhead = 1 + i;
             long timestamp = TimeUtil.getDayTimeStamp(shipmentDayOfWeek, weeksAhead);
 
-            shipments[4 + i] = new Shipment(timestamp, plugin);
+            shipments[4 + i] = new Shipment(timestamp, plugin, presetHandler.getDefaultPreset());
         }
     }
 
@@ -223,20 +267,12 @@ public class ShipmentManager {
         return shipments[3];
     }
 
-    public Shipment getShipmentByTimestamp(long timestamp) {
-        for(Shipment shipment : shipments) {
-            if(shipment != null && shipment.getShipmentEpochMS() == timestamp)
-                return shipment;
-        }
-        return null;
-    }
-
     public Shipment getTodaysShipment() {
         Shipment today = shipments[3];
         if(today == null)
             return null;
 
-        return today.isShipmentToday() ? today : null;
+        return today.isShipmentToday() || today.isForceEnabled() ? today : null;
     }
 
     public Shipment[] getShipments() {
