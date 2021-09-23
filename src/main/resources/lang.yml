@@ -1,6 +1,12 @@
+# %permission% - permission required to use command/feature
 no-permission:
-  - '&9[Shipment] &cYou do not have permission to use this command!'
+  - '&9[Shipment] &cYou do not have permission to use this!'
   - '&cYou must have permission &f%permission%&c!'
+
+# %usage% - the intended way to use the command
+missing-argument:
+  - '&9[Shipment] &cMissing command argument:'
+  - '&c/%usage%'
 
 admin-help-command:
   - '&9[Shipment] &4Admin commands:'
@@ -8,15 +14,23 @@ admin-help-command:
   - ' &c/shipment reload &fReloads possible files'
   - ' &c/shipment save &fAttempts to save plugin data'
   - ' &c/shipment bounds &fToggles view of bounds'
+  - ' &c/shipment force <start|stop> &fForcefully starts/stops next shipment'
 
+# %ms%
 reload-command:
   - '&9[Shipment] &7Plugin reloaded in &f%ms%ms&7!'
 
+# %ms%
 save-command:
   - '&9[Shipment] &7Plugin saved in &f%ms%ms&7!'
 
+# %enabled%
 bounds-command:
   - '&9[Shipment] &7Shipment boundary viewing: &f%enabled%'
+
+# %started%
+force-command:
+  - '&9[Shipment] &7Shipment has forcefully &f%started%'
 
 npc-no-shipment:
   - '&9[Shipment] &cThere is no shipment this week!'
@@ -34,7 +48,16 @@ setup:
 
   # %name% - the name of the preset
   preset-created:
-    - '&9[Shipment] &aSuccessfully created shipment named %name%'
+    - '&9[Shipment] &aSuccessfully created item preset named %name%'
+
+  # %name% - the name of the preset
+  preset-deleted:
+    - '&9[Shipment] &7Deleted preset named %name%'
+
+  preset-is-default-cannot-delete:
+    - '&9[Shipment] &cYou cannot delete this preset'
+    - '&cThis preset is the default item preset'
+    - '&cPlease select a different preset to be default first!'
 
 purchase:
   reached-max-purchases:
@@ -50,6 +73,7 @@ purchase:
     - '&cCost: &f$%cost%'
     - '&cBalance: &f$%balance%'
 
+  # %issue% - the issue occurring as described by Vault
   unexpected-error:
     - '&9[Shipment] &cAn unexpected error has occurred'
     - '&cPlease contact an admin for help!'
@@ -60,6 +84,15 @@ purchase:
     - '&9[Shipment] &7Purchase was successful'
     - '&7Ticket ID: &f%id%'
     - '&7Date Valid: &f%date%'
+
+  # %opener.name% - the name of the player who tried to use the ticket
+  # %opener.uuid% - the uuid of the player who tried to use the ticket
+  # %purchaser.uuid% - the uuid of the player who purchased the ticket
+  # %ticket-id% - the id of the ticket used
+  staff-warn-duplicate:
+    - '&9[Shipment] &4&l<!> &cDuplicate ticket warning &4&l<!>'
+    - '&e%opener.name% &7(%opener.uuid%) had duplicate ticket!'
+    - '&7Purchaser: %purchaser.uuid%, Ticket ID: %ticket-id%'
 
 claim:
   must-hold-ticket:

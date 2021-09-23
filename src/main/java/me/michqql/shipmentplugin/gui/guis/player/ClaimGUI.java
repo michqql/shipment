@@ -9,20 +9,26 @@ import org.bukkit.plugin.Plugin;
 
 public class ClaimGUI extends GUI {
 
+    private final ItemsForSale itemsForSale;
     private final TicketSales.Ticket ticket;
 
-    public ClaimGUI(Plugin bukkitPlugin, Player player, TicketSales.Ticket ticket) {
+    public ClaimGUI(Plugin bukkitPlugin, Player player, ItemsForSale itemsForSale, TicketSales.Ticket ticket) {
         super(bukkitPlugin, player);
+        this.itemsForSale = itemsForSale;
         this.ticket = ticket;
 
-        build("&9Claim items", 1 + (ticket.getItemSize() / 9));
+        build("&9Claim items", 1 + ((ticket.getPurchaseSize() - 1) / 9));
     }
 
     @Override
     protected void createInventory() {
         int slot = 0;
-        for(ItemsForSale.ForSale itemForSale : ticket.getPurchases()) {
-            this.inventory.setItem(slot, itemForSale.getItemStack());
+        for(ItemsForSale.ForSale item : ticket.getPurchases()) {
+            ItemsForSale.ForSale cached = itemsForSale.getItemForSaleBySaleIndex(item.getSaleIndex());
+            if(cached == null)
+                continue;
+
+            this.inventory.setItem(slot, cached.getItemStack());
             slot++;
         }
     }

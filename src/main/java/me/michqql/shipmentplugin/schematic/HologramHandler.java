@@ -28,18 +28,18 @@ public class HologramHandler {
     }
 
     private void loadConfig(FileConfiguration f) {
-        this.lines = f.getStringList("holographic-display");
+        this.lines = f.getStringList("crates.holographic-display");
 
         try {
-            this.xOffset = f.getDouble("hologram-offset.x");
+            this.xOffset = f.getDouble("crates.hologram-offset.x");
         } catch(NumberFormatException ignore) {}
 
         try {
-            this.yOffset = f.getDouble("hologram-offset.y");
+            this.yOffset = f.getDouble("crates.hologram-offset.y");
         } catch(NumberFormatException ignore) {}
 
         try {
-            this.zOffset = f.getDouble("hologram-offset.z");
+            this.zOffset = f.getDouble("crates.hologram-offset.z");
         } catch(NumberFormatException ignore) {}
     }
 

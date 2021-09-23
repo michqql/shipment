@@ -5,6 +5,7 @@ import me.michqql.shipmentplugin.data.CommentFile;
 import me.michqql.shipmentplugin.gui.InventoryListener;
 import me.michqql.shipmentplugin.npc.NPCHandler;
 import me.michqql.shipmentplugin.npc.NPCListener;
+import me.michqql.shipmentplugin.preset.PresetHandler;
 import me.michqql.shipmentplugin.schematic.CrateListener;
 import me.michqql.shipmentplugin.schematic.SchematicHandler;
 import me.michqql.shipmentplugin.shipment.ShipmentManager;
@@ -25,7 +26,7 @@ public final class ShipmentPlugin extends JavaPlugin {
     private Economy economy = null;
 
     private SchematicHandler schematicHandler;
-    private NPCHandler npcHandler;
+    private PresetHandler presetHandler;
     private ShipmentManager shipmentManager;
 
     @Override
@@ -64,12 +65,13 @@ public final class ShipmentPlugin extends JavaPlugin {
 
         // Handlers and Managers
         this.schematicHandler = new SchematicHandler(this, mainConfigurationFile);
-        this.npcHandler = new NPCHandler(this, mainConfigurationFile);
-        this.shipmentManager = new ShipmentManager(this, schematicHandler, npcHandler, mainConfigurationFile);
+        NPCHandler npcHandler = new NPCHandler(this, mainConfigurationFile);
+        this.presetHandler = new PresetHandler(this, mainConfigurationFile);
+        this.shipmentManager = new ShipmentManager(this, schematicHandler, presetHandler, mainConfigurationFile);
 
         // Commands
         Objects.requireNonNull(getCommand("shipment")).setExecutor(
-                new ShipmentCommand(this, messageUtil, schematicHandler, shipmentManager));
+                new ShipmentCommand(this, messageUtil, schematicHandler, shipmentManager, presetHandler));
 
         // Events
         new InventoryListener(this);
@@ -91,15 +93,17 @@ public final class ShipmentPlugin extends JavaPlugin {
     public void saveData() {
         if(shipmentManager != null)
             this.shipmentManager.save();
+
+        if(presetHandler != null)
+            this.presetHandler.save();
     }
 
     private void shutdown(boolean permanent) {
         // Unregister all listeners as they will be registered again on startup
         HandlerList.unregisterAll(this);
 
-        // Main configuration file does not need to be saved on disable as it is a comment file
-        if(shipmentManager != null)
-            this.shipmentManager.save();
+        // Save data that does not care about permanent shutdown
+        saveData();
 
         if(permanent) {
             if(schematicHandler != null)
@@ -116,7 +120,7 @@ public final class ShipmentPlugin extends JavaPlugin {
      */
     private boolean areRequiredDependenciesInstalled(FileConfiguration config) {
         boolean passed = true;
-        boolean usingHolographicDisplays = config.getBoolean("use-holographic-displays");
+        boolean usingHolographicDisplays = config.getBoolean("crates.use-holographic-displays", false);
 
         final PluginManager pm = Bukkit.getPluginManager();
         if(!pm.isPluginEnabled("WorldEdit")) {

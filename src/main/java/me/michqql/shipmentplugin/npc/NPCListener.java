@@ -41,7 +41,7 @@ public class NPCListener implements Listener {
     }
 
     private void loadConfig() {
-        this.skipEmptyShipments = config.getConfig().getBoolean("npc-skip-empty-shipments", true);
+        this.skipEmptyShipments = config.getConfig().getBoolean("npc.skip-empty-shipments", true);
     }
     @EventHandler
     public void onInteractAtNPC(NPCRightClickEvent e) {

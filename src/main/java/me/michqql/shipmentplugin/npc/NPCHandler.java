@@ -46,7 +46,7 @@ public class NPCHandler {
 
         FileConfiguration f = config.getConfig();
 
-        List<Integer> ids = f.getIntegerList("npc-ids");
+        List<Integer> ids = f.getIntegerList("npc.ids");
         for(int citizensID : ids) {
             if(citizensID == -1) {
                 this.allowSpawning = false;

@@ -5,6 +5,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 public abstract class DataFile {
 
@@ -27,6 +28,22 @@ public abstract class DataFile {
         this.path = (usesFolder ? folder + "/" : "") + file + "." + extension;
 
         init();
+        load();
+    }
+
+    public DataFile(Plugin plugin, File file) {
+        this.plugin = plugin;
+        this.pluginDataFolder = plugin.getDataFolder();
+        this.file = file;
+
+        this.usesFolder = !file.getParentFile().equals(pluginDataFolder);
+        this.folderName = file.getParent();
+        this.fileName = file.getName();
+        this.extension = Optional.of(fileName)
+                .filter(f -> f.contains("."))
+                .map(f -> f.substring(fileName.lastIndexOf(".") + 1)).orElse("");
+        this.path = (usesFolder ? folderName + "/" : "") + fileName + "." + extension;
+
         load();
     }
 

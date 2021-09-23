@@ -1,7 +1,9 @@
 package me.michqql.shipmentplugin.shipment;
 
 import me.michqql.shipmentplugin.data.type.ShipmentFile;
+import me.michqql.shipmentplugin.preset.PresetHandler;
 import me.michqql.shipmentplugin.utils.TimeUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 
@@ -14,16 +16,16 @@ public class Shipment {
     private final ItemsForSale itemsForSale;
     private final TicketSales ticketSales;
 
-    Shipment(long shipmentEpochMS) {
+    // Force start/stopped variables
+    boolean forceStarted, forceEnded;
+
+    Shipment(long shipmentEpochMS, Plugin plugin, PresetHandler.Preset preset) {
         this.shipmentEpochMS = shipmentEpochMS;
 
         this.itemsForSale = new ItemsForSale();
         this.ticketSales = new TicketSales(itemsForSale);
-    }
 
-    Shipment(long shipmentEpochMS, Plugin plugin) {
-        this(shipmentEpochMS);
-        load(plugin);
+        load(plugin, preset);
     }
 
     public long getShipmentEpochMS() {
@@ -51,6 +53,10 @@ public class Shipment {
         return Long.compare(shipmentEpochMS, TimeUtil.getStartOfToday());
     }
 
+    boolean isForceEnabled() {
+        return forceStarted && !forceEnded;
+    }
+
     /**
      * Package private method that should only be called by ShipmentManager
      * Saves this shipment object to file
@@ -67,7 +73,7 @@ public class Shipment {
         file.save();
     }
 
-    private void load(Plugin plugin) {
+    private void load(Plugin plugin, PresetHandler.Preset preset) {
         ShipmentFile file = new ShipmentFile(plugin, shipmentEpochMS);
 
         if(!file.existsOtherwiseDelete())
@@ -76,7 +82,7 @@ public class Shipment {
         FileConfiguration f = file.getConfig();
 
         // Load here...
-        itemsForSale.load(f.getConfigurationSection("items-for-sale"));
+        itemsForSale.loadWithPreset(f.getConfigurationSection("items-for-sale"), preset);
         ticketSales.load(f.getConfigurationSection("ticket-sales"));
     }
 }

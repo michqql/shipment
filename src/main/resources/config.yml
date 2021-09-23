@@ -26,87 +26,101 @@ presets:
   # If there are multiple presets, should a random preset be chosen and applied
   random: true
 
-  # The name for the default preset to be applied (if random preset is false)
-  default: ''
+  # The identifier for the default preset to be applied (if random preset is false)
+  default-identifier: ''
 
 # <>------------<>
 # <   The Ship   >
 # <>------------<>
-# The name of the schematic to load in the 'schematics' folder
-# Do not include file extension in this name
-ship-schematic-name: 'ship'
-ship-schematic-extension: 'schem'
+ship:
+  # The name of the schematic to load in the 'schematics' folder
+  # Do not include file extension in this name
+  schematic-name: 'ship'
+  schematic-extension: 'schem'
 
-# The world to spawn the ship in
-ship-world: 'world'
+  world: 'world'
 
-# Setting y to -1 will stop the ship from spawning
-ship-location:
-  x: 0
-  y: -1
-  z: 0
+  # Setting y to -1 will stop the ship from spawning
+  location:
+    x: 0
+    y: -1
+    z: 0
 
 # <>------------<>
 # <   The  NPC   >
 # <>------------<>
-# Please setup the NPC using Citizens.
-# Once setup, add the NPCs id to the list
-# Use '/npc id' to view the NPCs id
-npc-ids:
-  - -1
+npc:
+  # Please setup the NPC using Citizens.
+  # Once setup, add the NPCs id to the list
+  # Use '/npc id' to view the NPCs id
+  ids:
+    - -1
 
-# If there are no items on sale for the next week,
-# should the buy GUI not show when clicking on the NPC
-# This will skip shipments that have not been setup
-npc-skip-empty-shipments: true
+  # If there are no items on sale for the next week,
+  # should the buy GUI not show when clicking on the NPC
+  # This will skip shipments that have not been setup
+  skip-empty-shipments: true
 
 # <>------------<>
 # <    Ticket    >
 # <>------------<>
-# The maximum amount of tickets a single player can buy per shipment
-# Set to -1 for infinite
-max-tickets-per-player-per-shipment: 1
+ticket:
+  # The maximum amount of tickets a single player can buy per shipment
+  # Set to -1 for infinite
+  max-per-player-per-shipment: 1
 
-# If set to true, all ticket purchases will be output to the console
-output-ticket-purchases: false
+  # Can players with a certain permission bypass this restriction?
+  max-ticket-permission-bypass: true
 
-# Send a warning message to console if a player tries to open a duplicate ticket
-warn-duplicate-tickets: true
+  max-ticket-permissions:
+    vip:
+      # The permission the player is required to have
+      permission: 'shipment.vip'
 
-# If true, only the player that purchased the ticket can claim its items
-only-purchaser-can-claim: true
+      # The new maximum amount of tickets the player can buy per shipment
+      upper-bound: 5
+
+    admin:
+      permission: 'perms.admin'
+      upper-bound: -1
+
+  # If set to true, all ticket purchases will be output to the console
+  output-purchases: false
+
+  # Send a warning message to console & staff if a player tries to open a duplicate ticket
+  warn-duplicate-tickets: true
+
+  # If true, only the player that purchased the ticket can claim its items
+  only-purchaser-can-claim: true
 
 # <>------------<>
 # <    Crates    >
 # <>------------<>
-# When pasting the schematic, should this plugin scan the region
-# for the specified crate blocks to automatically register them?
-auto-register-crates: true
+crates:
+  # See list of valid materials here: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+  materials:
+    - 'CHEST'
+    - 'BARREL'
 
-# See list of valid materials here: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
-crate-materials:
-  - 'CHEST'
-  - 'BARREL'
+  # Using holographic displays, should this plugin
+  # display a message above the crates?
+  use-holographic-displays: true
 
-# Using holographic displays, should this plugin
-# display a message above the crates?
-use-holographic-displays: true
+  # Message displayed above crates
+  holographic-display:
+    - '&3Crate'
 
-# Message displayed above crates
-holographic-display:
-  - '&3Crate'
+  # Hologram is originally centered at X.5, Y, Z.5
+  # Offsets relative to prior values
+  hologram-offset:
+    x: 0
+    y: 1.5
+    z: 0
 
-# Hologram is originally centered at X.5, Y, Z.5
-# Offsets relative to prior values
-hologram-offset:
-  x: 0
-  y: 1
-  z: 0
-
-crate-effects:
-  # See list of valid sounds here: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
-  sound:
-    play: true
-    on-open: 'BLOCK_CHEST_OPEN'
-    volume: 1.0
-    pitch: 1.0
+  effects:
+    # See list of valid sounds here: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
+    sound:
+      play: true
+      on-open: 'BLOCK_CHEST_OPEN'
+      volume: 1.0
+      pitch: 1.0

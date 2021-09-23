@@ -1,6 +1,7 @@
 package me.michqql.shipmentplugin.shipment;
 
 import me.michqql.shipmentplugin.gui.item.ItemBuilder;
+import me.michqql.shipmentplugin.preset.PresetHandler;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 
@@ -8,36 +9,38 @@ import java.util.Arrays;
 
 public class ItemsForSale {
 
-    private final int itemLimit;
-    private final ForSale[] sales;
+    private ForSale[] sales;
+    private int saleIndex;
 
     public ItemsForSale() {
-        this.itemLimit = 45;
-        this.sales = new ForSale[itemLimit];
+        this.sales = new ForSale[50];
     }
 
-    public int addAll(ItemsForSale itemsForSale) {
+    public void addAll(ItemsForSale itemsForSale) {
         int added = 0;
 
         for(ForSale forSale : itemsForSale.sales) {
+            if(forSale == null)
+                continue;
+
             int index = getFirstFreeIndex();
-            if(index == -1 || index >= sales.length)
+            if(index < 0 || index >= sales.length)
                 break;
 
             this.sales[index] = forSale;
             added++;
         }
 
-        return added;
+        this.saleIndex += added;
     }
 
-    public boolean addItemForSale(ItemStack item, double price) {
+    public void addItemForSale(ItemStack item, double price) {
         int index = getFirstFreeIndex();
         if(index == -1)
-            return false;
+            return;
 
-        this.sales[index] = new ForSale(index, item, price);
-        return true;
+        this.sales[index] = new ForSale(saleIndex, item, price);
+        this.saleIndex++;
     }
 
     public ForSale getItemForSale(int index) {
@@ -47,20 +50,23 @@ public class ItemsForSale {
         return sales[index];
     }
 
-    public boolean removeItemForSale(int index) {
+    public ForSale getItemForSaleBySaleIndex(int saleIndex) {
+        for(ForSale sale : sales) {
+            if(sale != null && sale.getSaleIndex() == saleIndex)
+                return sale;
+        }
+        return null;
+    }
+
+    public void removeItemForSale(int index) {
         if(index < 0 || index >= sales.length)
-            return false;
+            return;
 
         sales[index] = null;
-        return true;
     }
 
-    public boolean isIndexValid(int index) {
-        return index >= 0 && index < sales.length && sales[index] != null;
-    }
-
-    public int getItemLimit() {
-        return itemLimit;
+    public boolean isIndexInvalid(int index) {
+        return index < 0 || index >= sales.length || sales[index] == null;
     }
 
     public int getAmountOfItemsForSale() {
@@ -81,53 +87,78 @@ public class ItemsForSale {
             if (sales[i] == null)
                 return i;
         }
-        return -1;
+
+        // Array is full at this point, grow size
+        int maxSize = sales.length;
+        sales = Arrays.copyOf(sales, maxSize + 10);
+        return maxSize;
     }
 
-    void save(ConfigurationSection section) {
+    public void save(ConfigurationSection section) {
+        section.set("sales-index", saleIndex);
+
+        ConfigurationSection itemSection = section.createSection("items");
+
         for(int i = 0; i < sales.length; i++) {
             ForSale sale = sales[i];
             if(sale == null)
                 continue;
 
-            section.set(i + ".item", ItemBuilder.serializeItem(sale.itemStack));
-            section.set(i + ".price", sale.price);
+            itemSection.set(i + ".index", sale.saleIndex);
+            itemSection.set(i + ".item", ItemBuilder.serializeItem(sale.itemStack));
+            itemSection.set(i + ".price", sale.price);
         }
     }
 
-    void load(ConfigurationSection section) {
+    public void load(ConfigurationSection section) {
         if(section == null)
             return;
 
-        for(String strIndex : section.getKeys(false)) {
-            int index;
-            try {
-                index = Integer.parseInt(strIndex);
-            } catch(NumberFormatException e) {
-                continue;
-            }
+        this.saleIndex = section.getInt("sales-index");
+
+        ConfigurationSection itemSection = section.getConfigurationSection("items");
+        if(itemSection == null)
+            return;
+
+        for(String strIndex : itemSection.getKeys(false)) {
+            // We do not care about this strIndex
+            int index = getFirstFreeIndex();
 
             sales[index] = new ForSale(
-                    index,
-                    ItemBuilder.deserializeItem(section.getString(strIndex + ".item")),
-                    section.getDouble(strIndex + ".price")
+                    itemSection.getInt(strIndex + ".index"),
+                    ItemBuilder.deserializeItem(itemSection.getString(strIndex + ".item")),
+                    itemSection.getDouble(strIndex + ".price")
             );
         }
     }
 
+    void loadWithPreset(ConfigurationSection section, PresetHandler.Preset preset) {
+        if(preset == null) {
+            load(section);
+            return;
+        }
+
+        if (section == null) {
+            addAll(preset.getItems());
+            return;
+        }
+
+        load(section);
+    }
+
     public static class ForSale {
-        final int index;
+        final int saleIndex;
         private final ItemStack itemStack;
         private final double price;
 
-        protected ForSale(int index, ItemStack itemStack, double price) {
-            this.index = index;
+        protected ForSale(int saleIndex, ItemStack itemStack, double price) {
+            this.saleIndex = saleIndex;
             this.itemStack = itemStack;
             this.price = price;
         }
 
-        public int getIndex() {
-            return index;
+        public int getSaleIndex() {
+            return saleIndex;
         }
 
         public ItemStack getItemStack() {

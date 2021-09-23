@@ -2,6 +2,7 @@ package me.michqql.shipmentplugin.schematic;
 
 import me.michqql.shipmentplugin.ShipmentPlugin;
 import me.michqql.shipmentplugin.data.CommentFile;
+import me.michqql.shipmentplugin.events.CrateOpenEvent;
 import me.michqql.shipmentplugin.gui.guis.player.ClaimGUI;
 import me.michqql.shipmentplugin.gui.item.ItemBuilder;
 import me.michqql.shipmentplugin.shipment.Shipment;
@@ -25,6 +26,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.checkerframework.checker.units.qual.min;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,14 +55,14 @@ public class CrateListener implements Listener {
 
     private void loadConfig(FileConfiguration f) {
         // Ticket restrictions
-        this.warnDuplicateTickets = f.getBoolean("warn-duplicate-tickets", true);
-        this.onlyPurchaserCanOpen = f.getBoolean("only-purchaser-can-claim");
+        this.warnDuplicateTickets = f.getBoolean("ticket.warn-duplicate-tickets", true);
+        this.onlyPurchaserCanOpen = f.getBoolean("ticket.only-purchaser-can-claim");
 
         // Sound
-        this.playSound = f.getBoolean("crate-effects.sound.play");
-        this.volume = (float) f.getDouble("crate-effects.sound.volume");
-        this.pitch = (float) f.getDouble("crate-effects.sound.pitch");
-        String soundString = f.getString("crate-effects.sound.on-open", "");
+        this.playSound = f.getBoolean("crates.effects.sound.play");
+        this.volume = (float) f.getDouble("crates.effects.sound.volume");
+        this.pitch = (float) f.getDouble("crates.effects.sound.pitch");
+        String soundString = f.getString("crates.effects.sound.on-open", "");
         try {
             this.sound = Sound.valueOf(soundString);
         } catch (IllegalArgumentException | NullPointerException e) {
@@ -118,9 +120,27 @@ public class CrateListener implements Listener {
             if(warnDuplicateTickets) {
                 Bukkit.getLogger().warning("[Shipment] " + player.getName() + " (" + player.getUniqueId() + ") had duplicate ticket!");
                 Bukkit.getLogger().warning("[Shipment] Purchaser: " + ticket.getPlayer() + ", TicketID: " + ticket.getTicketId());
+
+                final TicketSales.Ticket finalTicket = ticket;
+                HashMap<String, String> placeholders = new HashMap<String, String>(){{
+                    put("opener.name", player.getName());
+                    put("opener.uuid", player.getUniqueId().toString());
+                    put("purchaser.uuid", finalTicket.getPlayer().toString());
+                    put("ticket-id", String.valueOf(finalTicket.getTicketId()));
+                }};
+
+                for(Player online : Bukkit.getOnlinePlayers()) {
+                    if(online.hasPermission("shipment.warn")) {
+                        messageUtil.sendList(online, "purchase.staff-warn-duplicate", placeholders);
+                    }
+                }
             }
             return;
         }
+
+        Shipment shipment = shipmentManager.getTodaysShipment();
+        if(shipment == null)
+            return;
 
         // Check player is purchaser and config option enabled
         if(onlyPurchaserCanOpen && !ticket.getPlayer().equals(player.getUniqueId())) {
@@ -138,7 +158,8 @@ public class CrateListener implements Listener {
             player.playSound(block.getLocation(), sound, volume, pitch);
 
         // 4. Open ClaimGUI corresponding to held ticket
-        new ClaimGUI(plugin, player, ticket).openGUI();
+        Bukkit.getPluginManager().callEvent(new CrateOpenEvent(player, shipment, ticket));
+        new ClaimGUI(plugin, player, shipment.getItemsForSale(), ticket).openGUI();
     }
 
     private boolean isInsideRegion(Location location, Location min, Location max) {

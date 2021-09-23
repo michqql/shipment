@@ -29,4 +29,9 @@ public class IOUtil {
 
         return result.toArray(new File[0]);
     }
+
+    public static String filenameWithoutExtension(String filenameWithExtension) {
+        // Regex replaces any '.' followed by any amount of characters with blank
+        return filenameWithExtension.replaceFirst("[.][^.]+$", "");
+    }
 }
