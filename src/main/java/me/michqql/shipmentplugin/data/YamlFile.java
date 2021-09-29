@@ -5,7 +5,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
-import java.io.File;
 import java.io.IOException;
 
 public class YamlFile extends DataFile {
@@ -21,9 +20,8 @@ public class YamlFile extends DataFile {
     }
 
     @Override
-    protected boolean load() {
+    protected void load() {
         this.fileConfiguration = YamlConfiguration.loadConfiguration(super.file);
-        return true;
     }
 
     @Override

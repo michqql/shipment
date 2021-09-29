@@ -13,8 +13,7 @@ public class ExceptionFile extends DataFile {
     }
 
     @Override
-    protected boolean load() {
-        return true;
+    protected void load() {
     }
 
     public void write(Exception e) {

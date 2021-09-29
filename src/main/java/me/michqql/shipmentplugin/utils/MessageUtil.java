@@ -4,7 +4,6 @@ import me.michqql.shipmentplugin.data.YamlFile;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;

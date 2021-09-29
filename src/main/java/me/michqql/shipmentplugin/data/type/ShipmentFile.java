@@ -16,9 +16,8 @@ public class ShipmentFile extends YamlFile {
     }
 
     @Override
-    protected boolean copy() {
+    protected void copy() {
         this.exists = false;
-        return true;
     }
 
     public boolean existsOtherwiseDelete() {

@@ -16,14 +16,12 @@ public class TextFile extends DataFile {
     }
 
     @Override
-    protected boolean load() {
+    protected void load() {
         try {
             this.w = new PrintWriter(file);
-            return true;
         } catch (FileNotFoundException e) {
             Bukkit.getLogger().severe("[Shipment] Could not load text file " + path + "!");
             e.printStackTrace();
-            return false;
         }
     }
 

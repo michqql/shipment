@@ -11,8 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class AddItemGUI extends GUI {
 
@@ -41,15 +39,16 @@ public class AddItemGUI extends GUI {
         this.amount = 1;
         this.price = 0;
 
+        //noinspection NullableProblems
         this.pricePrompt = new NumericPrompt() {
             @Override
-            protected @Nullable Prompt acceptValidatedInput(@NotNull ConversationContext context, @NotNull Number input) {
+            protected Prompt acceptValidatedInput(ConversationContext context, Number input) {
                 context.setSessionData("price", input.doubleValue());
                 return null;
             }
 
             @Override
-            public @NotNull String getPromptText(@NotNull ConversationContext context) {
+            public String getPromptText(ConversationContext context) {
                 return MessageUtil.format(messageUtil.getMessage("setup.enter-price"));
             }
         };
@@ -107,7 +106,7 @@ public class AddItemGUI extends GUI {
                 .lore(
                         "&bSaves item and goes back",
                         "",
-                        "&bItem: " + (originalItem == null ? "&cnone" : "&f" + originalItem.getI18NDisplayName()),
+                        "&bItem: " + (originalItem == null ? "&cnone" : "&f" + ItemBuilder.getItemName(originalItem)),
                         "&bAmount: &f" + amount,
                         "&bPrice: &f$" + price
                 ).getItem());
@@ -217,4 +216,6 @@ public class AddItemGUI extends GUI {
     protected boolean onPlayerInventoryClickEvent(int slot, ClickType clickType) {
         return false;
     }
+
+
 }

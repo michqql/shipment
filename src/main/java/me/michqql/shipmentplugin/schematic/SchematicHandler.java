@@ -71,6 +71,7 @@ public class SchematicHandler {
 
         // World
         String worldName = f.getString("ship.world", "");
+        assert worldName != null;
         this.world = Bukkit.getWorld(worldName);
 
         if(world == null) {
@@ -225,14 +226,6 @@ public class SchematicHandler {
     }
 
     // Viewing boundaries
-    public void viewSchematicBoundaries(Player player) {
-        viewers.add(player);
-    }
-
-    public void stopViewingSchematicBoundaries(Player player) {
-        viewers.remove(player);
-    }
-
     public boolean toggleViewingSchematicBoundaries(Player player) {
         if(!viewers.remove(player)) {
             viewers.add(player);

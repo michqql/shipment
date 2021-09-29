@@ -40,8 +40,15 @@ public class PresetHandler {
 
         String defaultIdentifier = f.getString("presets.default-identifier", "");
         if(enabled) {
-            if(defaultIdentifier.isEmpty() && !random) {
+            if(defaultIdentifier == null || defaultIdentifier.isEmpty() && !random) {
                 Bukkit.getLogger().warning("[Shipment] Item presets disabled - please specify a default");
+                return;
+            }
+
+            if(getPresetsSize() == 0) {
+                this.enabled = false;
+                this.failedSetup = true;
+                Bukkit.getLogger().warning("[Shipment] Item presets disabled - no available presets");
                 return;
             }
 

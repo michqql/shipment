@@ -15,11 +15,11 @@ public class CommentFile extends YamlFile {
     }
 
     @Override
-    protected boolean copy() {
+    protected void copy() {
         InputStream in = plugin.getResource(path);
         if(in == null) {
             Bukkit.getLogger().warning("[Shipment] Could not find resource to copy named " + path);
-            return false;
+            return;
         }
 
         try {
@@ -35,9 +35,7 @@ public class CommentFile extends YamlFile {
             in.close();
         } catch(IOException e) {
             Bukkit.getLogger().log(Level.SEVERE, "[Shipment] Could not copy default resource " + path);
-            return false;
         }
-        return true;
     }
 
     @Override

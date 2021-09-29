@@ -1,7 +1,6 @@
 package me.michqql.shipmentplugin.gui.item;
 
 import me.michqql.shipmentplugin.utils.MessageUtil;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -34,13 +33,13 @@ public class ItemBuilder {
     public ItemBuilder(Material material) {
         this.item = new ItemStack(material);
         this.meta = item.getItemMeta();
-        this.dataContainer = meta.getPersistentDataContainer();
+        this.dataContainer = meta != null ? meta.getPersistentDataContainer() : null;
     }
 
     public ItemBuilder(ItemStack itemStack) {
         this.item = itemStack;
         this.meta = item.getItemMeta();
-        this.dataContainer = meta.getPersistentDataContainer();
+        this.dataContainer = meta != null ? meta.getPersistentDataContainer() : null;
     }
 
     public ItemBuilder specifyPlaceholders(Map<String, String> placeholders) {
@@ -49,7 +48,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder displayName(String string) {
-        meta.displayName(text(string));
+        meta.setDisplayName(format(string));
         return this;
     }
 
@@ -58,11 +57,11 @@ public class ItemBuilder {
     }
 
     public ItemBuilder lore(List<String> strings) {
-        List<Component> lore = new ArrayList<>();
+        List<String> lore = new ArrayList<>();
         for(String line : strings) {
-            lore.add(text(line));
+            lore.add(format(line));
         }
-        meta.lore(lore);
+        meta.setLore(lore);
         return this;
     }
 
@@ -71,13 +70,13 @@ public class ItemBuilder {
     }
 
     public ItemBuilder addLore(List<String> strings) {
-        List<Component> lore = meta.hasLore() ? meta.lore() : new ArrayList<>();
+        List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
         assert lore != null; // Checked by meta.hasLore()
 
         for(String line : strings) {
-            lore.add(text(line));
+            lore.add(format(line));
         }
-        meta.lore(lore);
+        meta.setLore(lore);
         return this;
     }
 
@@ -107,9 +106,8 @@ public class ItemBuilder {
         return item;
     }
 
-    private Component text(String text) {
-        text = MessageUtil.replacePlaceholdersStatic(text, placeholders); // first replace placeholders
-        return Component.text(text);
+    private String format(String text) {
+        return MessageUtil.replacePlaceholdersStatic(text, placeholders);
     }
 
     /**
@@ -155,7 +153,9 @@ public class ItemBuilder {
         return dataContainer.has(namedKey, type) ? dataContainer.get(namedKey, type) : null;
     }
 
-    public static Component getComponentFromText(String text) {
-        return Component.text(MessageUtil.format(text));
+    public static String getItemName(ItemStack item) {
+        assert item.getItemMeta() != null; // Checked by item.hasItemMeta()
+        return item.hasItemMeta() && item.getItemMeta().hasDisplayName() ?
+                item.getItemMeta().getDisplayName() : item.getType().toString();
     }
 }

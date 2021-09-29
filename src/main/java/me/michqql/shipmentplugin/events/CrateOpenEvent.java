@@ -5,14 +5,14 @@ import me.michqql.shipmentplugin.shipment.TicketSales;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
 public class CrateOpenEvent extends Event {
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
+    @SuppressWarnings("NullableProblems")
     @Override
-    public @NotNull HandlerList getHandlers() {
+    public HandlerList getHandlers() {
         return HANDLER_LIST;
     }
 

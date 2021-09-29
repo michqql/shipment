@@ -1,8 +1,7 @@
 package me.michqql.shipmentplugin.gui;
 
-import me.michqql.shipmentplugin.gui.item.ItemBuilder;
+import me.michqql.shipmentplugin.utils.MessageUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryType;
@@ -61,7 +60,7 @@ public abstract class GUI {
      * @param rows  - the amount of rows to give this inventory
      */
     protected final void build(String title, int rows) {
-        this.inventory = Bukkit.createInventory(null, rows * 9, ItemBuilder.getComponentFromText(title));
+        this.inventory = Bukkit.createInventory(null, rows * 9, MessageUtil.format(title));
         SCHEDULER.runTaskAsynchronously(bukkitPlugin, () -> {
             this.createInventory();
             this.finishedBuilding = true;
@@ -74,7 +73,7 @@ public abstract class GUI {
      * @param type  - the inventory type to use
      */
     protected final void build(String title, InventoryType type) {
-        this.inventory = Bukkit.createInventory(null, type, ItemBuilder.getComponentFromText(title));
+        this.inventory = Bukkit.createInventory(null, type, MessageUtil.format(title));
         SCHEDULER.runTaskAsynchronously(bukkitPlugin, () -> {
             this.createInventory();
             this.finishedBuilding = true;
@@ -118,14 +117,6 @@ public abstract class GUI {
      *         {@code false} to allow the player to take the item
      */
     protected abstract boolean onPlayerInventoryClickEvent(final int slot, final ClickType clickType);
-
-    /**
-     * Calls the updateInventory() method from the main thread
-     * This ensures no IllegalStateExceptions will get thrown by Bukkit when updating the inventory
-     */
-    protected final void updateInventoryFromMainThread() {
-        SCHEDULER.runTask(bukkitPlugin, this::updateInventory);
-    }
 
     /*
      * Internal methods

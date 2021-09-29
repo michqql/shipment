@@ -18,11 +18,11 @@ public class JsonFile extends DataFile {
     }
 
     @Override
-    protected boolean copy() {
+    protected void copy() {
         InputStream in = plugin.getResource(path);
         if(in == null) {
             Bukkit.getLogger().warning("[Shipment] Could not find resource to copy named " + path);
-            return false;
+            return;
         }
 
         try {
@@ -38,20 +38,16 @@ public class JsonFile extends DataFile {
             in.close();
         } catch(IOException e) {
             Bukkit.getLogger().log(Level.SEVERE, "[Shipment] Could not copy default resource " + path);
-            return false;
         }
-        return true;
     }
 
     @Override
-    protected boolean load() {
+    protected void load() {
         try {
             this.element = PARSER.parse(new FileReader(this.file));
-            return true;
         } catch (FileNotFoundException e) {
             Bukkit.getLogger().log(Level.SEVERE, "[Shipment] Could not read json file named " + path);
             e.printStackTrace();
-            return false;
         }
     }
 

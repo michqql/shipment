@@ -12,8 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 
@@ -40,15 +38,16 @@ public class PresetsGUI extends GUI {
         this.messageUtil = messageUtil;
         this.presetHandler = presetHandler;
 
+        //noinspection NullableProblems
         this.presetNamePrompt = new StringPrompt() {
             @Override
-            public @Nullable Prompt acceptInput(@NotNull ConversationContext context, @Nullable String input) {
+            public Prompt acceptInput(ConversationContext context, String input) {
                 context.setSessionData("name", input);
                 return null;
             }
 
             @Override
-            public @NotNull String getPromptText(@NotNull ConversationContext context) {
+            public String getPromptText(ConversationContext context) {
                 return MessageUtil.format(messageUtil.getMessage("setup.enter-preset-name"));
             }
         };

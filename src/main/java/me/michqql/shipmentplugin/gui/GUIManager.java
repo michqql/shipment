@@ -1,7 +1,5 @@
 package me.michqql.shipmentplugin.gui;
 
-import org.bukkit.Bukkit;
-
 import java.util.*;
 
 public class GUIManager {
