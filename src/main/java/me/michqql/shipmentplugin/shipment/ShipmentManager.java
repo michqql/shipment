@@ -185,18 +185,18 @@ public class ShipmentManager {
             return;
 
         if(start) {
-            current.forceStarted = true;
             ShipmentStartEvent shipmentStartEvent = new ShipmentStartEvent(current, true);
             Bukkit.getPluginManager().callEvent(shipmentStartEvent);
 
             if(!shipmentStartEvent.isCancelled())
+                current.forceEnabled = true;
                 schematicHandler.pasteSchematic();
         }
         else {
-            current.forceEnded = true;
             ShipmentStopEvent stopEvent = new ShipmentStopEvent(current, true);
             Bukkit.getPluginManager().callEvent(stopEvent);
 
+            current.forceEnabled = false;
             schematicHandler.undoPaste();
         }
     }

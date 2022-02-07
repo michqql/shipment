@@ -16,7 +16,7 @@ public class Shipment {
     private final TicketSales ticketSales;
 
     // Force start/stopped variables
-    boolean forceStarted, forceEnded;
+    boolean forceEnabled;
 
     Shipment(long shipmentEpochMS, Plugin plugin, PresetHandler.Preset preset) {
         this.shipmentEpochMS = shipmentEpochMS;
@@ -53,7 +53,7 @@ public class Shipment {
     }
 
     boolean isForceEnabled() {
-        return forceStarted && !forceEnded;
+        return forceEnabled;
     }
 
     /**
